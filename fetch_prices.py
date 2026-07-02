@@ -64,7 +64,7 @@ ohlc = df.loc[:, ['Open', 'High', 'Low', 'Close']]
 # ohlc['Date'] = ohlc['Date'].apply(mpl_dates.date2num)
 # ohlc = ohlc.astype(float)
 
-mpf.plot(ohlc, type='candle')
+# mpf.plot(ohlc, type='candle')
 
 @rate_limit(max_per_second=2)
 def get_company_info(symbol):
@@ -102,6 +102,7 @@ def get_financials(symbol):
     """Get financial statements."""
     ticker = yf.Ticker(symbol)
 
+    # Add earnings
     return {
         'income_statement': ticker.financials,
         'quarterly_income': ticker.quarterly_financials,
@@ -181,3 +182,14 @@ print(f"  Low: ${targets['low']}")
 print(f"  Mean: ${targets['mean']}")
 print(f"  High: ${targets['high']}")
 print(f"  Current: ${targets['current']}")
+
+@rate_limit(max_per_second=2)
+def get_news(symbol):
+    """Get analyst recommendations and price targets."""
+    ticker = yf.Ticker(symbol)
+
+    print('Holders')
+    print(ticker.news)
+
+get_news('APPL')
+

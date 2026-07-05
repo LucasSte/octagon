@@ -12,7 +12,7 @@ class Portfolio:
         self.portfolio_map = portfolio_map
 
     def get_balance(self):
-        return self.balance
+        return f'Your uninvested balance is ${self.balance}'
 
     # Spot trade
     def buy_item(self, ticker, amount):
@@ -28,7 +28,7 @@ class Portfolio:
         else:
             self.portfolio_map[ticker] = Possession(quantity=total)
 
-        return amount
+        return f'Bought {amount} of {ticker} at ${total}. Your new uninvested balance is ${self.balance}.'
 
     # Spot trade
     def sell_item(self, ticker, amount):
@@ -43,9 +43,10 @@ class Portfolio:
         self.portfolio_map[ticker].quantity -= amount
 
         price = yahoo.real_time_price(ticker)
-        self.balance += amount*price
+        total = amount*price
+        self.balance += total
 
-        return amount
+        return f'Sold {amount} of {ticker} at ${total}. You new uninvested balance is ${self.balance}.'
 
     def get_formatted_portfolio(self, assets_map):
         final_string = f'Balance: ${self.balance} \n\n'

@@ -2,6 +2,8 @@ import yfinance as yf
 import mplfinance as mpf
 import time
 from functools import wraps
+from datetime import datetime
+import pytz
 
 def rate_limit(max_per_second=2):
     """Decorator to rate limit function calls."""
@@ -43,6 +45,27 @@ def get_historical_data(symbol, start, end, interval='1d'):
 
     return df
 
+# Return's today's date in the format YYYY-MM-DD
+# Synced to New York time zone (stock exchange)
+def today_date():
+    ny_tz = pytz.timezone('America/New_York')
+    now_ny = datetime.now(ny_tz)
+    return now_ny.strftime('%Y-%m-%d %H:%M')
+
+def validate_date(date_string):
+    try:
+        # Parse the date string
+        date_obj = datetime.strptime(date_string, '%Y-%m-%d')
+
+        # Check if date is not in the future
+        today = datetime.now().date()
+        if date_obj >= today:
+            return 'Date in the future'
+
+        return ''
+    except ValueError:
+        return 'InvalidDate'
+
 allowed_intervals = {'1m', '2m', '5m', '30m', '60m', '90m', '1d', '5d', '1wk', '1mo', '3mo'}
 # Returns everything as a markdown table
 # Dates in YYYY-MM-DD. The end date cannot be the same as the start one, even if you want today's information.
@@ -52,6 +75,16 @@ def formatted_historical_data(ticker, start, end, interval):
     if interval not in allowed_intervals:
         return f'Invalid interval: {interval}'
     historical_data = get_historical_data(ticker, start, end, interval)
+
+    if start is not None:
+        start_val = validate_date(start)
+        if start_val != '':
+            return start_val
+
+    if end is not None:
+        end_val = validate_date(end)
+        if end_val != '':
+            return end_val
 
     if not historical_data.empty:
         # Reset index to make datetime a column
@@ -96,6 +129,16 @@ def formatted_historical_data_as_candle(
 
     if plot_type not in allowed_plot_type:
         return f'Invalid plot type: {plot_type}'
+
+    if start is not None:
+        start_val = validate_date(start)
+        if start_val != '':
+            return start_val
+
+    if end is not None:
+        end_val = validate_date(end)
+        if end_val != '':
+            return end_val
 
     historical_data = get_historical_data(ticker, start, end, interval)
 

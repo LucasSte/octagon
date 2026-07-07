@@ -119,12 +119,16 @@ financials = get_financials('AAPL')
 # Income Statement
 income = financials['income_statement']
 print("Annual Income Statement:")
-print(income.loc[['Total Revenue', 'Gross Profit', 'Net Income']])
+print(income.loc[['Total Revenue', 'Gross Profit', 'Net Income', 'EBITDA']])
 
 # Balance Sheet
 balance = financials['balance_sheet']
 print("\nBalance Sheet:")
-print(balance.loc[['Total Assets', 'Total Liabilities Net Minority Interest', 'Total Equity Gross Minority Interest']])
+print(balance.loc[['Total Assets']])
+
+cash_flow = financials['cash_flow']
+print(cash_flow.loc[['Free Cash Flow']])
+
 
 @rate_limit(max_per_second=2)
 def get_options_chain(symbol, expiration_date=None):

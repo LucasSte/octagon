@@ -192,3 +192,69 @@ def get_formatted_company_info(ticker):
     '''
 
     return formatted
+
+@rate_limit(max_per_second=2)
+def get_financials(symbol):
+    ticker = yf.Ticker(symbol)
+
+    # Add earnings
+    return {
+        'income_statement': ticker.financials,
+        'quarterly_income': ticker.quarterly_financials,
+        'balance_sheet': ticker.balance_sheet,
+        'quarterly_balance': ticker.quarterly_balance_sheet,
+        'cash_flow': ticker.cashflow,
+        'quarterly_cash_flow': ticker.quarterly_cashflow
+    }
+
+def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
+    financials = get_financials(symbol)
+
+    income = financials[income_key]
+    balance = financials[balance_key]
+    cash_flow = financials[cash_flow_key]
+
+    header = '|----------------|'
+    revenue_row = '| Total Revenue  |'
+    profit_row = '| Gross Profit   |'
+    income_row = '| Net Income     |'
+    ebitda_row = '| EBITDA         |'
+    assets_row = '| Total Assets   |'
+    flow_row = '| Free Cash Flow |'
+
+    total_revenue = income.loc['Total Revenue']
+    gross_profit = income.loc['Gross Profit']
+    net_income = income.loc['Net Income']
+    ebitda = income.loc['EBITDA']
+    total_assets = balance.loc['Total Assets']
+    free_cash_flow = cash_flow.loc['Free Cash Flow']
+
+    for i in range(0, 3):
+        header += f' {income.keys()[i].strftime('%Y-%m-%d')} |'
+        revenue_row += f' {total_revenue.iloc[i]:e} |'
+        profit_row += f' {gross_profit.iloc[i]:e} |'
+        income_row += f' {net_income.iloc[i]:e} |'
+        ebitda_row += f' {ebitda.iloc[i]:e} |'
+        assets_row += f' {total_assets.iloc[i]:e} |'
+        flow_row += f' {free_cash_flow.iloc[i]:e} |'
+
+    header += '\n'
+    revenue_row += '\n'
+    income_row += '\n'
+    ebitda_row += '\n'
+    assets_row += '\n'
+    free_cash_flow += '\n'
+
+    full_table = header + revenue_row + income_row + ebitda_row + assets_row + free_cash_flow
+
+    return full_table
+
+# Returns total revenue, gross profit, net income, ebitda, total assets, and free cash flow for the past three years
+def get_formatted_financials_for_past_three_years(symbol):
+    return build_financials_table(symbol, 'income_statement', 'balance_sheet', 'cash_flow')
+
+
+# Returns total revenue, gross profit, net income, ebitda, total assets, and free cash flow for the past three quarters
+def get_formatted_financials_for_past_three_quarters(symbol):
+    return build_financials_table(symbol, 'quarterly_income', 'quarterly_balance', 'quarterly_cash_flow')
+

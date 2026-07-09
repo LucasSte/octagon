@@ -4,6 +4,7 @@ import time
 from functools import wraps
 from datetime import datetime
 import pytz
+import pandas as pd
 
 def rate_limit(max_per_second=2):
     """Decorator to rate limit function calls."""
@@ -110,6 +111,53 @@ def formatted_historical_data(ticker, start, end, interval):
         markdown_table += f'Average close price: {average: .4f}\n'
 
         return markdown_table
+
+    return f'No data available for {ticker}'
+
+def formatted_historical_data_with_pandas(ticker, start, end, interval):
+    if interval not in allowed_intervals:
+        return f'Invalid interval: {interval}'
+    historical_data = get_historical_data(ticker, start, end, interval)
+
+    if start is not None:
+        start_val = validate_date(start)
+        if start_val != '':
+            return start_val
+
+    if end is not None:
+        end_val = validate_date(end)
+        if end_val != '':
+            return end_val
+
+    if not historical_data.empty:
+        # Reset index to make datetime a column
+        df_reset = historical_data.reset_index()
+
+        # Build the output dataframe with the columns/formatting you want
+        result = pd.DataFrame({
+            'Datetime': df_reset['Date'].dt.strftime('%Y-%m-%d %H:%M:%S'),
+            'Open': df_reset['Open'].round(2),
+            'High': df_reset['High'].round(2),
+            'Low': df_reset['Low'].round(2),
+            'Close': df_reset['Close'].round(2),
+            'Volume': df_reset['Volume'].round(0).astype(int)
+        })
+
+        transpose = result.T
+
+        formatted = transpose.as_string()
+
+        average_return = df_reset['Close'].pct_change().mean()
+        volatility = df_reset['Close'].pct_change().std()
+        average = df_reset['Close'].mean()
+
+        formatted += '\n\n'
+
+        formatted += f'Average return: {average_return:.4f}\n'
+        formatted += f'Volatility (std): {volatility:.4f}\n'
+        formatted += f'Average close price: {average: .4f}\n'
+
+        return formatted
 
     return f'No data available for {ticker}'
 
@@ -243,18 +291,120 @@ def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
     income_row += '\n'
     ebitda_row += '\n'
     assets_row += '\n'
-    free_cash_flow += '\n'
+    flow_row += '\n'
 
     full_table = header + revenue_row + income_row + ebitda_row + assets_row + free_cash_flow
 
     return full_table
 
+def build_financials_table_with_pandas(symbol, income_key, balance_key, cash_flow_key):
+    financials = get_financials(symbol)
+
+    income = financials[income_key]
+    balance = financials[balance_key]
+    cash_flow = financials[cash_flow_key]
+
+    total_revenue = income.loc['Total Revenue']
+    gross_profit = income.loc['Gross Profit']
+    net_income = income.loc['Net Income']
+    ebitda = income.loc['EBITDA']
+    total_assets = balance.loc['Total Assets']
+    free_cash_flow = cash_flow.loc['Free Cash Flow']
+
+    # Use the first 3 period columns as dates
+    dates = [income.keys()[i].strftime('%Y-%m-%d') for i in range(3)]
+
+    data = {
+        'Total Revenue': [total_revenue.iloc[i] for i in range(3)],
+        'Gross Profit':  [gross_profit.iloc[i] for i in range(3)],
+        'Net Income':    [net_income.iloc[i] for i in range(3)],
+        'EBITDA':        [ebitda.iloc[i] for i in range(3)],
+        'Total Assets':  [total_assets.iloc[i] for i in range(3)],
+        'Free Cash Flow':[free_cash_flow.iloc[i] for i in range(3)],
+    }
+
+    df = pd.DataFrame(data, index=dates).T  # rows = metrics, columns = dates
+
+    formatted = df.map(lambda x: f'{x:e}').to_string()
+    return formatted
+
 # Returns total revenue, gross profit, net income, ebitda, total assets, and free cash flow for the past three years
 def get_formatted_financials_for_past_three_years(symbol):
+    # Try the pandas version too
     return build_financials_table(symbol, 'income_statement', 'balance_sheet', 'cash_flow')
 
 
 # Returns total revenue, gross profit, net income, ebitda, total assets, and free cash flow for the past three quarters
 def get_formatted_financials_for_past_three_quarters(symbol):
+    # Try the pandas version too
     return build_financials_table(symbol, 'quarterly_income', 'quarterly_balance', 'quarterly_cash_flow')
 
+@rate_limit(max_per_second=2)
+def get_options_chain(symbol, expiration_date=None):
+    ticker = yf.Ticker(symbol)
+
+    expirations = ticker.options
+    exp_date = expiration_date or expirations[0]
+
+
+    opt = ticker.option_chain(exp_date)
+
+    names = ['1', '2', '3', '4', '5']
+    top_calls = opt.calls.nlargest(5, 'volume')[['strike', 'lastPrice', 'volume', 'openInterest', 'impliedVolatility']]
+    top_puts = opt.puts.nlargest(5, 'volume')[['strike', 'lastPrice', 'volume', 'openInterest', 'impliedVolatility']]
+
+    top_calls.index = names
+    top_puts.index = names
+
+    formatted = 'Top 5 calls by volume:\n'
+    formatted += top_calls.to_string()
+    formatted += '\n\nTop 5 puts by volume:\n'
+    formatted += top_puts.to_string()
+
+@rate_limit(max_per_second=2)
+def get_options_activity_simple_threshold_clusters(symbol):
+    # z-score is a simple threshold — if you want true clustering
+    # (grouping nearby expirations by combined date-proximity + activity,
+    # not just flagging outliers), you could instead run KMeans from
+    # sklearn.cluster on ['days_to_expiration', 'activity_score']
+    # (scaled first).
+    ticker = yf.Ticker(symbol)
+    expirations = ticker.options
+
+    rows = []
+    for exp in expirations:
+        opt = ticker.option_chain(exp)
+        calls, puts = opt.calls, opt.puts
+
+        total_volume = calls['volume'].sum() + puts['volume'].sum()
+        total_oi = calls['openInterest'].sum() + puts['openInterest'].sum()
+        days_out = (pd.Timestamp(exp) - pd.Timestamp.today()).days
+
+        rows.append({
+            'expiration': exp,
+            'days_to_expiration': days_out,
+            'total_volume': total_volume,
+            'total_oi': total_oi,
+            'activity_score': total_volume + total_oi
+        })
+
+    z_thresh = 1.0
+    activity = pd.DataFrame(rows).sort_values('activity_score', ascending=False)
+    activity['z_score'] = (activity['activity_score'] - activity['activity_score'].mean()) / activity['activity_score'].std()
+    activity.sort_values('activity_score', ascending=False)
+    filtered = activity[activity['z_score'] > z_thresh]
+
+    five_best = filtered[:5]
+    names = ['1', '2', '3', '4', '5']
+    five_best.index = names
+
+    formatted = 'Option chains activity clusters statistical outliers\n\n'
+    formatted += five_best.to_string()
+    return formatted
+
+# TODO:
+# 1. Analyst data
+# 2. Check if news is worth it.
+# 3. Reorganize file, splitting between utility and actual functions
+# 4. Check if functions are working (including the portfolio part)
+# 5. Integrate with LLM (use an API call).

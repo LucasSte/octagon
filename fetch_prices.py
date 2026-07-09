@@ -163,6 +163,46 @@ top_calls = options['calls'].nlargest(5, 'volume')[['strike', 'lastPrice', 'volu
 print("\nTop 5 calls by volume:")
 print(top_calls)
 
+top_puts = options['puts'].nlargest(5, 'volume')[['strike', 'lastPrice', 'volume', 'openInterest', 'impliedVolatility']]
+print('\nTop 5 puts by volume:')
+print(top_puts)
+
+def get_expiration_activity(symbol):
+    """Aggregate volume and open interest across all expirations."""
+    ticker = yf.Ticker(symbol)
+    expirations = ticker.options
+
+    rows = []
+    for exp in expirations:
+        opt = ticker.option_chain(exp)
+        calls, puts = opt.calls, opt.puts
+
+        total_volume = calls['volume'].sum() + puts['volume'].sum()
+        total_oi = calls['openInterest'].sum() + puts['openInterest'].sum()
+        days_out = (pd.Timestamp(exp) - pd.Timestamp.today()).days
+
+        rows.append({
+            'expiration': exp,
+            'days_to_expiration': days_out,
+            'total_volume': total_volume,
+            'total_oi': total_oi,
+            'activity_score': total_volume + total_oi
+        })
+
+    return pd.DataFrame(rows).sort_values('activity_score', ascending=False)
+
+
+def find_activity_clusters(df, z_thresh=1.0):
+    """Flag expirations whose activity is a statistical outlier (cluster) vs the rest."""
+    df = df.copy()
+    df['z_score'] = (df['activity_score'] - df['activity_score'].mean()) / df['activity_score'].std()
+    df['is_cluster'] = df['z_score'] > z_thresh
+    return df.sort_values('activity_score', ascending=False)
+
+activity = get_expiration_activity("AAPL")
+clustered = find_activity_clusters(activity)
+print(clustered[['expiration', 'days_to_expiration', 'activity_score', 'is_cluster']])
+
 @rate_limit(max_per_second=2)
 def get_analyst_data(symbol):
     """Get analyst recommendations and price targets."""
@@ -188,13 +228,12 @@ print(f"  Mean: ${targets['mean']}")
 print(f"  High: ${targets['high']}")
 print(f"  Current: ${targets['current']}")
 
-@rate_limit(max_per_second=2)
-def get_news(symbol):
-    """Get analyst recommendations and price targets."""
-    ticker = yf.Ticker(symbol)
-
-    print('Holders')
-    print(ticker.news)
-
-get_news('APPL')
-
+# @rate_limit(max_per_second=2)
+# def get_news(symbol):
+#     """Get analyst recommendations and price targets."""
+#     ticker = yf.Ticker(symbol)
+#
+#     print('Holders')
+#     print(ticker.news)
+#
+# get_news('APPL')

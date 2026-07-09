@@ -228,6 +228,8 @@ print(f"  Mean: ${targets['mean']}")
 print(f"  High: ${targets['high']}")
 print(f"  Current: ${targets['current']}")
 
+# This returns a list of news headers and their website.
+# I believe this content is too raw to be fed to an LLM.
 # @rate_limit(max_per_second=2)
 # def get_news(symbol):
 #     """Get analyst recommendations and price targets."""

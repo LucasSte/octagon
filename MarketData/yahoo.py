@@ -402,9 +402,32 @@ def get_options_activity_simple_threshold_clusters(symbol):
     formatted += five_best.to_string()
     return formatted
 
+@rate_limit(max_per_second=2)
+def get_formatted_analyst_data(symbol):
+    ticker = yf.Ticker(symbol)
+
+    formatted = 'Recommendations (-1m stands for 1 month in the past):\n'
+    formatted += ticker.recommendations.to_String()
+
+    formatted += '\n\n'
+
+    formatted = 'Five most recent upgrades and downgrades:\n'
+    formatted += ticker.upgrades_downgrades.head(5).to_string()
+
+    formatted += '\n\n'
+
+    targets = ticker.analyst_price_targets
+    formatted += 'Analyst price targets:\n'
+    formatted += f"  Low: ${targets['low']}"
+    formatted += f"  Mean: ${targets['mean']}"
+    formatted += f"  High: ${targets['high']}"
+    formatted += f"  Current: ${targets['current']}"
+
+    return formatted
+
+
+
 # TODO:
-# 1. Analyst data
-# 2. Check if news is worth it.
-# 3. Reorganize file, splitting between utility and actual functions
-# 4. Check if functions are working (including the portfolio part)
-# 5. Integrate with LLM (use an API call).
+# 1. Reorganize file, splitting between utility and actual functions
+# 2. Check if functions are working (including the portfolio part)
+# 3. Integrate with LLM (use an API call).

@@ -12,7 +12,7 @@ class Portfolio:
         self.portfolio_map = portfolio_map
 
     def get_balance(self):
-        return f'Your uninvested balance is ${self.balance}'
+        return f'Your uninvested balance is ${self.balance:.2f}'
 
     # Spot trade
     def buy_item(self, ticker, amount):
@@ -24,11 +24,11 @@ class Portfolio:
         self.balance -= total
 
         if ticker in self.portfolio_map:
-            self.portfolio_map[ticker].quantity += total
+            self.portfolio_map[ticker].quantity += amount
         else:
-            self.portfolio_map[ticker] = Possession(quantity=total)
+            self.portfolio_map[ticker] = Possession(quantity=amount)
 
-        return f'Bought {amount} of {ticker} at ${total}. Your new uninvested balance is ${self.balance}.'
+        return f'Bought {amount} units of {ticker} at ${total:.2f}. Your new uninvested balance is ${self.balance:.2f}.'
 
     # Spot trade
     def sell_item(self, ticker, amount):
@@ -38,7 +38,7 @@ class Portfolio:
         possession = self.portfolio_map[ticker]
 
         if possession.quantity < amount:
-            return f'Only {possession.quantity} of {ticker} is available to sell'
+            return f'Only {possession.quantity:.2f} units of {ticker} is available to sell'
 
         self.portfolio_map[ticker].quantity -= amount
 
@@ -46,17 +46,19 @@ class Portfolio:
         total = amount*price
         self.balance += total
 
-        return f'Sold {amount} of {ticker} at ${total}. You new uninvested balance is ${self.balance}.'
+        return f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
 
     def get_formatted_portfolio(self, assets_map):
-        final_string = f'Balance: ${self.balance} \n\n'
+        final_string = f'Balance: ${self.balance:.2f} \n\n'
 
         final_string += 'Assets: \n'
         for ticker, possession in self.portfolio_map.items():
-            final_string += f'{ticker} ({assets_map[ticker].name})\n'
+            price = yahoo.real_time_price(ticker)
+            total = possession.quantity*price
+            final_string += f'{ticker} ({assets_map[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f}\n'
 
 
-        final_string += 'Legend for assets: \nTICKER (name): quantity'
+        final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value'
 
         return final_string
 

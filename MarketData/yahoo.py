@@ -1,180 +1,7 @@
-import yfinance as yf
 import mplfinance as mpf
-import time
-from functools import wraps
-from datetime import datetime
 import pytz
-import pandas as pd
+from MarketData.yahoo_utils import *
 
-'''
-UTILITY FUNCTIONS.
-DO NOT INVOKE THESE DIRECTLY!
-'''
-
-def rate_limit(max_per_second=2):
-    """Decorator to rate limit function calls."""
-    min_interval = 1.0 / max_per_second
-    last_called = [0.0]
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            elapsed = time.time() - last_called[0]
-            wait_time = min_interval - elapsed
-            if wait_time > 0:
-                time.sleep(wait_time)
-            result = func(*args, **kwargs)
-            last_called[0] = time.time()
-            return result
-        return wrapper
-    return decorator
-
-@rate_limit(max_per_second=2)
-def real_time_price(ticker):
-    # Get stock info
-    stock = yf.Ticker(ticker)
-    return stock.info['currentPrice']
-
-@rate_limit(max_per_second=2)
-def get_historical_data(symbol, start, end, interval='1d'):
-    """
-    Get historical OHLCV data.
-
-    Intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
-    """
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(start=start, end=end, interval=interval)
-
-    return df
-
-allowed_intervals = {'1m', '2m', '5m', '30m', '60m', '90m', '1d', '5d', '1wk', '1mo', '3mo'}
-
-def validate_date(date_string):
-    try:
-        # Parse the date string
-        date_obj = datetime.strptime(date_string, '%Y-%m-%d')
-
-        # Check if date is not in the future
-        today = datetime.now().date()
-        if date_obj >= today:
-            return 'Date in the future'
-
-        return ''
-    except ValueError:
-        return 'InvalidDate'
-
-
-allowed_plot_type = {'candle', 'line', 'renko', 'pnf'}
-
-@rate_limit(max_per_second=2)
-def get_company_info(symbol):
-    """Get comprehensive company information."""
-    ticker = yf.Ticker(symbol)
-    info = ticker.info
-
-    return {
-        'name': info.get('longName'),
-        'symbol': info.get('symbol'),
-        'sector': info.get('sector'),
-        'industry': info.get('industry'),
-        'website': info.get('website'),
-        'employees': info.get('fullTimeEmployees'),
-        'description': info.get('longBusinessSummary'),
-        'market_cap': info.get('marketCap'),
-        'pe_ratio': info.get('trailingPE'),
-        'forward_pe': info.get('forwardPE'),
-        'dividend_yield': info.get('dividendYield'),
-        'beta': info.get('beta'),
-        '52_week_high': info.get('fiftyTwoWeekHigh'),
-        '52_week_low': info.get('fiftyTwoWeekLow')
-    }
-
-@rate_limit(max_per_second=2)
-def get_financials(symbol):
-    ticker = yf.Ticker(symbol)
-
-    # Add earnings
-    return {
-        'income_statement': ticker.financials,
-        'quarterly_income': ticker.quarterly_financials,
-        'balance_sheet': ticker.balance_sheet,
-        'quarterly_balance': ticker.quarterly_balance_sheet,
-        'cash_flow': ticker.cashflow,
-        'quarterly_cash_flow': ticker.quarterly_cashflow
-    }
-
-def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
-    financials = get_financials(symbol)
-
-    income = financials[income_key]
-    balance = financials[balance_key]
-    cash_flow = financials[cash_flow_key]
-
-    header = '|----------------|'
-    revenue_row = '| Total Revenue  |'
-    profit_row = '| Gross Profit   |'
-    income_row = '| Net Income     |'
-    ebitda_row = '| EBITDA         |'
-    assets_row = '| Total Assets   |'
-    flow_row = '| Free Cash Flow |'
-
-    total_revenue = income.loc['Total Revenue']
-    gross_profit = income.loc['Gross Profit']
-    net_income = income.loc['Net Income']
-    ebitda = income.loc['EBITDA']
-    total_assets = balance.loc['Total Assets']
-    free_cash_flow = cash_flow.loc['Free Cash Flow']
-
-    for i in range(0, 3):
-        header += f' {income.keys()[i].strftime('%Y-%m-%d')} |'
-        revenue_row += f' {total_revenue.iloc[i]:e} |'
-        profit_row += f' {gross_profit.iloc[i]:e} |'
-        income_row += f' {net_income.iloc[i]:e} |'
-        ebitda_row += f' {ebitda.iloc[i]:e} |'
-        assets_row += f' {total_assets.iloc[i]:e} |'
-        flow_row += f' {free_cash_flow.iloc[i]:e} |'
-
-    header += '\n'
-    revenue_row += '\n'
-    income_row += '\n'
-    ebitda_row += '\n'
-    assets_row += '\n'
-    flow_row += '\n'
-
-    full_table = header + revenue_row + income_row + ebitda_row + assets_row + free_cash_flow
-
-    return full_table
-
-def build_financials_table_with_pandas(symbol, income_key, balance_key, cash_flow_key):
-    financials = get_financials(symbol)
-
-    income = financials[income_key]
-    balance = financials[balance_key]
-    cash_flow = financials[cash_flow_key]
-
-    total_revenue = income.loc['Total Revenue']
-    gross_profit = income.loc['Gross Profit']
-    net_income = income.loc['Net Income']
-    ebitda = income.loc['EBITDA']
-    total_assets = balance.loc['Total Assets']
-    free_cash_flow = cash_flow.loc['Free Cash Flow']
-
-    # Use the first 3 period columns as dates
-    dates = [income.keys()[i].strftime('%Y-%m-%d') for i in range(3)]
-
-    data = {
-        'Total Revenue': [total_revenue.iloc[i] for i in range(3)],
-        'Gross Profit':  [gross_profit.iloc[i] for i in range(3)],
-        'Net Income':    [net_income.iloc[i] for i in range(3)],
-        'EBITDA':        [ebitda.iloc[i] for i in range(3)],
-        'Total Assets':  [total_assets.iloc[i] for i in range(3)],
-        'Free Cash Flow':[free_cash_flow.iloc[i] for i in range(3)],
-    }
-
-    df = pd.DataFrame(data, index=dates).T  # rows = metrics, columns = dates
-
-    formatted = df.map(lambda x: f'{x:e}').to_string()
-    return formatted
 
 '''
 FUNCTIONS TO BE USED AS TOOLS FOR AGENTS.
@@ -194,7 +21,8 @@ def today_date():
     """
     ny_tz = pytz.timezone('America/New_York')
     now_ny = datetime.now(ny_tz)
-    return now_ny.strftime('%Y-%m-%d %H:%M')
+    formatted = "Today's date (YYYY-MM-DD HH:MM): "
+    return formatted + now_ny.strftime('%Y-%m-%d %H:%M')
 
 
 def formatted_historical_data(ticker, start, end, interval):
@@ -247,7 +75,7 @@ def formatted_historical_data(ticker, start, end, interval):
 
 def formatted_historical_data_with_pandas(ticker, start, end, interval):
     """
-    An alternative to the above function suing pandas internal formatter
+    An alternative to the above function using pandas internal formatter
     """
     if interval not in allowed_intervals:
         return f'Invalid interval: {interval}'
@@ -274,12 +102,10 @@ def formatted_historical_data_with_pandas(ticker, start, end, interval):
             'High': df_reset['High'].round(2),
             'Low': df_reset['Low'].round(2),
             'Close': df_reset['Close'].round(2),
-            'Volume': df_reset['Volume'].round(0).astype(int)
+            'Volume': df_reset['Volume'].apply(lambda x: '{:e}'.format(x))
         })
 
-        transpose = result.T
-
-        formatted = transpose.as_string()
+        formatted = result.to_string()
 
         average_return = df_reset['Close'].pct_change().mean()
         volatility = df_reset['Close'].pct_change().std()
@@ -287,7 +113,7 @@ def formatted_historical_data_with_pandas(ticker, start, end, interval):
 
         formatted += '\n\n'
 
-        formatted += f'Average return: {average_return:.4f}\n'
+        formatted += f'Average return: {average_return*100:.4f}%\n'
         formatted += f'Volatility (std): {volatility:.4f}\n'
         formatted += f'Average close price: {average: .4f}\n'
 
@@ -295,7 +121,7 @@ def formatted_historical_data_with_pandas(ticker, start, end, interval):
 
     return f'No data available for {ticker}'
 
-def formatted_historical_data_as_candle(
+def formatted_historical_data_as_plot_figure(
         ticker,
         start,
         end,
@@ -327,9 +153,12 @@ def formatted_historical_data_as_candle(
     historical_data = get_historical_data(ticker, start, end, interval)
 
     ohlc = historical_data.loc[:, ['Open', 'High', 'Low', 'Close']]
-    ohlc['Date'] = historical_data.to_datetime(ohlc.index)
+    ohlc['Date'] = pd.to_datetime(ohlc.index)
     fig_name = f'{ticker}_{start}_{end}.jpg'
-    mpf.plot(ohlc, type='candle', mav=moving_average, savefig=fig_name)
+    if moving_average is not None:
+        mpf.plot(ohlc, type='candle', mav=moving_average, savefig=fig_name)
+    else:
+        mpf.plot(ohlc, type='candle', savefig=fig_name)
 
     return fig_name
 
@@ -340,14 +169,15 @@ def get_formatted_company_info(ticker):
     """
     c_info = get_company_info(ticker)
 
+    # Leaving description out
+    #     Description: {c_info['description']}
     formatted = f'''
     Information for {ticker}:
     
     Name: {c_info['name']}
     Sector: {c_info['sector']}
     Industry: {c_info['industry']}
-    Description: {c_info['description']}
-    Market capitalization: {c_info['market_cap']}
+    Market capitalization: {c_info['market_cap']:e}
     Trailing PE ratio: {c_info['pe_ratio']}
     Forward PE ration: {c_info['forward_pe']}
     Dividend Yield: {c_info['dividend_yield']}
@@ -397,9 +227,9 @@ def get_options_chain(symbol, expiration_date=None):
     top_calls.index = names
     top_puts.index = names
 
-    formatted = 'Top 5 calls by volume:\n'
+    formatted = f'Top 5 calls by volume with expiration on {exp_date}:\n'
     formatted += top_calls.to_string()
-    formatted += '\n\nTop 5 puts by volume:\n'
+    formatted += f'\n\nTop 5 puts by volume with expiration on {exp_date}:\n'
     formatted += top_puts.to_string()
     return formatted
 
@@ -443,7 +273,7 @@ def get_options_activity_simple_threshold_clusters(symbol):
 
     five_best = filtered[:5]
     names = ['1', '2', '3', '4', '5']
-    five_best.index = names
+    five_best.index = names[:len(five_best)]
 
     formatted = 'Option chains activity clusters statistical outliers\n\n'
     formatted += five_best.to_string()
@@ -458,7 +288,7 @@ def get_formatted_analyst_data(symbol):
     ticker = yf.Ticker(symbol)
 
     formatted = 'Recommendations (-1m stands for 1 month in the past):\n'
-    formatted += ticker.recommendations.to_String()
+    formatted += ticker.recommendations.to_string()
 
     formatted += '\n\n'
 
@@ -469,14 +299,9 @@ def get_formatted_analyst_data(symbol):
 
     targets = ticker.analyst_price_targets
     formatted += 'Analyst price targets:\n'
-    formatted += f"  Low: ${targets['low']}"
-    formatted += f"  Mean: ${targets['mean']}"
-    formatted += f"  High: ${targets['high']}"
-    formatted += f"  Current: ${targets['current']}"
+    formatted += f"  Low: ${targets['low']}\n"
+    formatted += f"  Mean: ${targets['mean']}\n"
+    formatted += f"  High: ${targets['high']}\n"
+    formatted += f"  Current: ${targets['current']}\n"
 
     return formatted
-
-
-# TODO:
-# 1. Check if functions are working (including the portfolio part)
-# 2. Integrate with LLM (use an API call).

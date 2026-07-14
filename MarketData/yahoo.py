@@ -292,8 +292,10 @@ def get_formatted_analyst_data(symbol):
 
     formatted += '\n\n'
 
-    formatted = 'Five most recent upgrades and downgrades:\n'
-    formatted += ticker.upgrades_downgrades.head(5).to_string()
+    formatted += 'Five most recent upgrades and downgrades:\n'
+    new_index = ticker.upgrades_downgrades.head(5).reset_index()
+    new_index.index = ['1', '2', '3', '4', '5']
+    formatted += new_index.to_string()
 
     formatted += '\n\n'
 

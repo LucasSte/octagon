@@ -28,8 +28,5 @@ ticker = 'AAPL'
 # print('Get options activity clusters')
 # print(get_options_activity_simple_threshold_clusters(ticker))
 
-# TODO:
-# 1. This function below does not have a nice formatting
-# 2. Integrate with LLM (use an API call).
 print('Analyst Data')
 print(get_formatted_analyst_data(ticker))

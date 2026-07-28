@@ -75,5 +75,16 @@ TOOLS_DICT = [
                 "description": "Formatted string showing portfolio balance and assets with quantities and market values, including a legend (e.g., 'Balance: $1500.00 \\n\\nAssets: \\nAAPL (Apple Inc.): 10.00 <=> $1500.00\\n...')"
             }
         }
-    }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_available_assets",
+            "description": "List assets available to trade",
+            "returns": {
+                "type": "string",
+                "description": "Formatted string listing the assets available to trade",
+            }
+        }
+    },
 ]

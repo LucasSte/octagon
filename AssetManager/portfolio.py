@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from MarketData import yahoo
+from AssetManager.assets import available_assets
 
 
 @dataclass
@@ -48,18 +49,26 @@ class Portfolio:
 
         return f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
 
-    def get_formatted_portfolio(self, assets_map):
+    def get_formatted_portfolio(self):
         final_string = f'Balance: ${self.balance:.2f} \n\n'
 
         final_string += 'Assets: \n'
         for ticker, possession in self.portfolio_map.items():
             price = yahoo.real_time_price(ticker)
             total = possession.quantity*price
-            final_string += f'{ticker} ({assets_map[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f}\n'
+            final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f}\n'
 
 
         final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value'
 
         return final_string
 
-
+    @staticmethod
+    def build_dispatch_dict(instance: Portfolio):
+        dispatch_dict = {
+            'get_balance': instance.get_balance,
+            'buy_item': instance.buy_item,
+            'sell_item': instance.sell_item,
+            'get_formatted_portfolio': instance.get_formatted_portfolio,
+        }
+        return dispatch_dict

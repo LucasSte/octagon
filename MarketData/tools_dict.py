@@ -1,3 +1,4 @@
+from MarketData.yahoo import *
 """
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents to provide financial data.
@@ -200,3 +201,15 @@ TOOLS_DICT = [
         }
     }
 ]
+
+DISPATCH_DICT = {
+    'formatted_price': formatted_price,
+    'today_date': today_date,
+    'formatted_historical_data': formatted_historical_data,
+    'get_formatted_company_info': get_formatted_company_info,
+    'get_formatted_financials_for_past_three_years': get_formatted_financials_for_past_three_years,
+    'get_formatted_financials_for_past_three_quarters': get_formatted_financials_for_past_three_quarters,
+    'get_options_chain': get_options_chain,
+    'get_options_activity_simple_threshold_clusters': get_options_activity_simple_threshold_clusters,
+    'get_formatted_analyst_data': get_formatted_analyst_data,
+}

@@ -52,18 +52,20 @@ class Portfolio:
         return f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
 
     def get_formatted_portfolio(self):
-        final_string = f'Balance: ${self.balance:.2f} \n\n'
+        final_string = f'Uninvested balance: ${self.balance:.2f} \n\n'
 
-        final_string += 'Assets: \n'
-        for ticker, possession in self.portfolio_map.items():
-            price = yahoo.real_time_price(ticker)
-            total = possession.quantity*price
-            profit_or_loss = total - possession.purchase_value
-            profit_or_loss_percent = (profit_or_loss / possession.purchase_value) * 100
-            final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) \n'
+        if len(self.portfolio_map) > 0:
+            final_string += 'Assets: \n'
+            for ticker, possession in self.portfolio_map.items():
+                price = yahoo.real_time_price(ticker)
+                total = possession.quantity*price
+                profit_or_loss = total - possession.purchase_value
+                profit_or_loss_percent = (profit_or_loss / possession.purchase_value) * 100
+                final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) \n'
 
-
-        final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss'
+            final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss'
+        else:
+            final_string += 'No assets in portfolio'
 
         return final_string
 

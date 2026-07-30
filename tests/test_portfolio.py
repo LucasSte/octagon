@@ -134,7 +134,7 @@ class TestPortfolio(unittest.TestCase):
             result = self.portfolio.get_formatted_portfolio()
             
             # Check that the format includes balance and assets
-            self.assertIn('Balance: $1000.00', result)
+            self.assertIn('Uninvested balance: $1000.00', result)
             self.assertIn('Assets:', result)
             self.assertIn('AAPL (Apple Inc.): 100.00 <=> $200.00 <=> $-320.00 (-61.54%)', result)
             self.assertIn('MSFT (Microsoft Corporation): 50.00 <=> $100.00 <=> $52.00 (108.33%)', result)

@@ -2,6 +2,7 @@
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents for portfolio management.
 """
+from AssetManager.assets import list_available_assets
 
 TOOLS_DICT = [
     {
@@ -88,3 +89,7 @@ TOOLS_DICT = [
         }
     },
 ]
+
+DISPATCH_DICT = {
+    'list_available_assets': list_available_assets
+}

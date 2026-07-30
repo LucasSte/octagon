@@ -6,6 +6,7 @@ from AssetManager.assets import available_assets
 @dataclass
 class Possession:
     quantity: float
+    purchase_value: float
 
 class Portfolio:
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
@@ -26,8 +27,9 @@ class Portfolio:
 
         if ticker in self.portfolio_map:
             self.portfolio_map[ticker].quantity += amount
+            self.portfolio_map[ticker].purchase_value += total
         else:
-            self.portfolio_map[ticker] = Possession(quantity=amount)
+            self.portfolio_map[ticker] = Possession(quantity=amount, purchase_value=total)
 
         return f'Bought {amount} units of {ticker} at ${total:.2f}. Your new uninvested balance is ${self.balance:.2f}.'
 
@@ -56,10 +58,12 @@ class Portfolio:
         for ticker, possession in self.portfolio_map.items():
             price = yahoo.real_time_price(ticker)
             total = possession.quantity*price
-            final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f}\n'
+            profit_or_loss = total - possession.purchase_value
+            profit_or_loss_percent = (profit_or_loss / possession.purchase_value) * 100
+            final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) \n'
 
 
-        final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value'
+        final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss'
 
         return final_string
 

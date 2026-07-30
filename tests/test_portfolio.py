@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from AssetManager.assets import Asset
 from AssetManager.portfolio import Portfolio, Possession
@@ -115,28 +115,30 @@ class TestPortfolio(unittest.TestCase):
     @patch('AssetManager.portfolio.yahoo.real_time_price')
     def test_get_formatted_portfolio(self, mock_price):
         """Test get_formatted_portfolio method."""
-        # Create a mock assets_map for testing
-        assets_map = {
-            'AAPL': Asset(name='Apple Inc.', ticker='AAPL'),
-            'MSFT': Asset(name='Microsoft Corporation', ticker='NVDA')
-        }
-
-        mock_price.return_value = 2
-        
-        # Add some items to the portfolio
-        self.portfolio.portfolio_map = {
-            'AAPL': Possession(quantity=100.0),
-            'MSFT': Possession(quantity=50.0)
-        }
-        
-        result = self.portfolio.get_formatted_portfolio(assets_map)
-        
-        # Check that the format includes balance and assets
-        self.assertIn('Balance: $1000.00', result)
-        self.assertIn('Assets:', result)
-        self.assertIn('AAPL (Apple Inc.): 100.00 <=> $200.00', result)
-        self.assertIn('MSFT (Microsoft Corporation): 50.00 <=> $100.00', result)
-        self.assertIn('Legend for assets:', result)
+        # Mock the assets dictionary to provide asset names
+        with patch('AssetManager.portfolio.available_assets') as mock_assets:
+            mock_assets_dict = {
+                'AAPL': Asset(name='Apple Inc.', ticker='AAPL'),
+                'MSFT': Asset(name='Microsoft Corporation', ticker='MSFT')
+            }
+            mock_assets.__getitem__.side_effect = lambda key: mock_assets_dict[key]
+            
+            mock_price.return_value = 2
+            
+            # Add some items to the portfolio
+            self.portfolio.portfolio_map = {
+                'AAPL': Possession(quantity=100.0, purchase_value=520),
+                'MSFT': Possession(quantity=50.0, purchase_value=48)
+            }
+            
+            result = self.portfolio.get_formatted_portfolio()
+            
+            # Check that the format includes balance and assets
+            self.assertIn('Balance: $1000.00', result)
+            self.assertIn('Assets:', result)
+            self.assertIn('AAPL (Apple Inc.): 100.00 <=> $200.00 <=> $-320.00 (-61.54%)', result)
+            self.assertIn('MSFT (Microsoft Corporation): 50.00 <=> $100.00 <=> $52.00 (108.33%)', result)
+            self.assertIn('Legend for assets:', result)
 
 if __name__ == '__main__':
     unittest.main()

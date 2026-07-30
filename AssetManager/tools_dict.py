@@ -29,7 +29,7 @@ TOOLS_DICT = [
                     },
                     "amount": {
                         "type": "number",
-                        "description": "The quantity of the asset to buy"
+                        "description": "The quantity of the asset to buy (decimals accepted)"
                     }
                 },
                 "required": ["ticker", "amount"]

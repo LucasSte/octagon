@@ -59,7 +59,7 @@ TOOLS_DICT = [
                     },
                     "interval": {
                         "type": "string",
-                        "description": "Time interval for data points (1, 2, 5, 15, 30, 60 or 90 minutes, 1 or 5 days, 1 week, 1mo, 3mo)"
+                        "description": "Time interval for data points (1m, 2m, 5m, 15m, 30m, 60m or 90m for minutes, 1d or 5d for days, 1w for week, 1mo, 3mo for months)"
                     }
                 },
                 "required": ["ticker", "start", "end", "interval"]

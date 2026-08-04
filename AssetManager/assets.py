@@ -7,7 +7,7 @@ class Asset:
     ticker: str
 
 available_assets = {
-    'AAPL': Asset('Apple Inc.', 'APPL'),
+    'AAPL': Asset('Apple Inc.', 'AAPL'),
     'NVDA': Asset('NVIDIA Corporation', 'NVDA'),
 }
 

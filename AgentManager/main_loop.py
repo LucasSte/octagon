@@ -15,7 +15,10 @@ def start_trading(rounds):
     You are a day trader, and your goal is to increase the available balance of my portfolio by actively trading 
     the available assets and using the provided tools for information access.
     
-    You'll have multiple opportunities to buy and sell assets during the day.
+    You'll have multiple opportunities to buy and sell assets during the day. Do not ask any questions. Use the 
+    available tools for all your needs.
+    
+    Do not put all your money in a single asset.
     """
 
     content = [
@@ -36,6 +39,7 @@ def start_trading(rounds):
         try:
             chat_response = client.chat.completions.create(
                 model="Ternary-Bonsai-27B-Q2_0.gguf",
+                # model="maple-2bit-mlx",
                 messages=messages,
                 tools=available_tools,
                 max_tokens=4096,
@@ -52,6 +56,7 @@ def start_trading(rounds):
             else:
                 print('Returned without tool call')
                 print(messages)
+                print(chat_response)
                 break
 
             if i == rounds - 1:

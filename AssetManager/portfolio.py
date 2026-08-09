@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from MarketData import yahoo
 from AssetManager.assets import available_assets
+from typing import Callable
 
 
 @dataclass
@@ -12,6 +13,7 @@ class Portfolio:
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
         self.balance = balance
         self.portfolio_map = portfolio_map
+        self.interface_callback = Callable | None
 
     def get_balance(self):
         return f'Your uninvested balance is ${self.balance:.2f}'
@@ -31,6 +33,7 @@ class Portfolio:
         else:
             self.portfolio_map[ticker] = Possession(quantity=amount, purchase_value=total)
 
+        self.update_interface()
         return f'Bought {amount} units of {ticker} at ${total:.2f}. Your new uninvested balance is ${self.balance:.2f}.'
 
     # Spot trade
@@ -49,6 +52,7 @@ class Portfolio:
         total = amount*price
         self.balance += total
 
+        self.update_interface()
         return f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
 
     def get_formatted_portfolio(self):
@@ -78,3 +82,19 @@ class Portfolio:
             'get_formatted_portfolio': instance.get_formatted_portfolio,
         }
         return dispatch_dict
+
+    def set_interface_callback(self, callback: Callable):
+        self.interface_callback = callback
+
+    def update_interface(self):
+        if self.interface_callback is None:
+            return
+
+        interface_message = ''
+        if len(self.portfolio_map) == 0:
+            interface_message = 'No assets'
+        else:
+            for ticker, possession in self.portfolio_map.items():
+                interface_message += f'{possession.quantity} X {ticker}\n'
+
+        self.interface_callback(interface_message)

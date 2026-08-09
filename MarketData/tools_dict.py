@@ -29,8 +29,8 @@ TOOLS_DICT = [
     {
         "type": "function",
         "function": {
-            "name": "today_date",
-            "description": "Return's today's date in the format YYYY-MM-DD",
+            "name": "today_date_time",
+            "description": "Return's today's date and current time.",
             "returns": {
                 "type": "string",
                 "description": "Current date and time in New York timezone formatted as 'Today's date (YYYY-MM-DD HH:MM): YYYY-MM-DD HH:MM'"

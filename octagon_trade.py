@@ -1,6 +1,6 @@
 from AgentManager.trader_agent import TraderAgent
 from Dashboard.dashboard import OctagonDashboard
-from MarketData.yahoo import today_date
+from MarketData.yahoo import today_date_time
 
 if __name__ == "__main__":
     initial_prompt = f"""
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     
     Do not put all your money in a single asset.
     
-    Today's date is {today_date()}
+    Today's date is {today_date_time()}
     """
     rounds = 10
 

@@ -13,7 +13,7 @@ def formatted_price(ticker):
     return f'{ticker}: ${price}'
 
 
-def today_date():
+def today_date_time():
     """
     Return's today's date in the format YYYY-MM-DD
     Synced to New York time zone (stock exchange)

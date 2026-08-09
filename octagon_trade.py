@@ -1,124 +1,22 @@
-from rich.panel import Panel
-from textual import work
-from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Input, Static, RichLog
-from textual.worker import get_current_worker
-
-class Dashboard(App):
-    def __init__(
-        self,
-        driver_class = None,
-        css_path = None,
-        watch_css = False,
-        ansi_color = None,
-    ):
-        super().__init__(driver_class, css_path, watch_css, ansi_color)
-        self.active_worker = None
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="root"):
-            with Horizontal(id="body"):
-                with Vertical(id="left"):
-                    yield Static(
-                        Panel("Waiting for agent ...", title="Last executed action",
-                              border_style="cyan", expand=True),
-                        id="top_left",
-                    )
-                    yield RichLog(
-                        max_lines=25,
-                        auto_scroll=True,
-                        wrap=False,
-                        id="bottom_left",
-                    )
-
-                with Vertical(id="right"):
-                    yield Static(
-                        Panel("$0", title="Uninvested balance",
-                              border_style="magenta", expand=True),
-                        id="top_right",
-                    )
-                    yield Static(
-                        Panel("None", title="Assets",
-                              border_style="red", expand=True),
-                        id="bottom_right"
-                    )
-
-            yield Input(
-                placeholder="Enter a command and press Enter...",
-                id="command",
-            )
-
-    def on_mount(self) -> None:
-        # Overall vertical structure
-        self.query_one("#root").styles.height = "100%"
-        self.query_one("#body").styles.height = "1fr"
-
-        # Main area: left = 75%, right = 25%
-        self.query_one("#left").styles.width = "75%"
-        self.query_one("#right").styles.width = "25%"
-
-        # Left panels
-        self.query_one("#top_left").styles.height = "1fr"
-
-        # Log panel
-        recent_messages = self.query_one("#bottom_left", RichLog)
-        recent_messages.styles.height = "3fr"
-        recent_messages.styles.border = ("round", "green")
-        recent_messages.styles.border_title_align = "center"
-        recent_messages.styles.background = "transparent"
-        recent_messages.border_title = "Monitor logs"
-
-        # Right panels
-        self.query_one("#top_right").styles.height = "1fr"
-        self.query_one("#bottom_right").styles.height = "5fr"
-
-        # Command box
-        command_box = self.query_one("#command", Input)
-        command_box.styles.height = 3
-        command_box.styles.border = ("round", "yellow")
-        command_box.border_title = "Command Input"
-
-    def update_right_panel(self, message: str) -> None:
-        self.query_one("#right", Static).update(
-            Panel(message, title="Right", border_style="magenta")
-        )
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Run when Enter is pressed in the Textual input box."""
-        command = event.value.strip().lower()
-        event.input.value = ""
-
-        if command == "quit":
-            self.exit()
-            return
-
-        if command == "trade":
-            self.active_worker = self.run_command(command)
-
-        if command == "stop":
-            self.stop_work()
-
-    def stop_work(self):
-        if self.active_worker is not None:
-            self.active_worker.cancel()
-            self.update_right_panel("Stopping")
-            self.active_worker = None
-
-    @work(thread=True, exclusive=True, exit_on_error=False)
-    def run_command(self, command: str):
-        worker = get_current_worker()
-
-        def on_update(message: str):
-            if not worker.is_cancelled:
-                self.call_from_thread(self.update_right_panel, message)
-
-        do_work(
-            command,
-            callback=on_update,
-            should_stop=lambda: worker.is_cancelled,
-        )
-
+from AgentManager.trader_agent import TraderAgent
+from Dashboard.dashboard import OctagonDashboard
+from MarketData.yahoo import today_date
 
 if __name__ == "__main__":
-    Dashboard().run()
+    initial_prompt = f"""
+    You are a day trader, and your goal is to increase the available balance of my portfolio by actively trading 
+    the available assets and using the provided tools for information access.
+    
+    You'll have multiple opportunities to buy and sell assets during the day. Do not ask any questions. Use the 
+    available tools for all your needs.
+    
+    Do not put all your money in a single asset.
+    
+    Today's date is {today_date()}
+    """
+    rounds = 10
+
+    trader_agent = TraderAgent(rounds, initial_prompt)
+    dashboard = OctagonDashboard(trader_agent)
+
+    dashboard.run()

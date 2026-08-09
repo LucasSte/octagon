@@ -97,4 +97,4 @@ class Portfolio:
             for ticker, possession in self.portfolio_map.items():
                 interface_message += f'{possession.quantity} X {ticker}\n'
 
-        self.interface_callback(interface_message)
+        self.interface_callback(interface_message, self.balance)

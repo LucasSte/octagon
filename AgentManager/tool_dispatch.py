@@ -6,6 +6,7 @@ from AssetManager.portfolio import Portfolio
 import MarketData.tools_dict
 import AssetManager.tools_dict
 from AssetManager.assets import available_assets
+from Dashboard.log_type import LogType
 
 class ToolDispatch:
     def __init__(self, portfolio: Portfolio):
@@ -15,6 +16,12 @@ class ToolDispatch:
 
         self.log_callback: Callable | None = None
         self.tool_status_callback: Callable | None = None
+
+    def set_log_callback(self, callback: Callable):
+        self.log_callback = callback
+
+    def set_tool_status_callback(self, callback: Callable):
+        self.tool_status_callback = callback
 
     def dispatch_function(self, response_message, message_list):
         if response_message.tool_calls:
@@ -28,7 +35,10 @@ class ToolDispatch:
                     )
                     parameters = json.loads(tool_call.function.arguments)
                     if len(parameters) < len(sig.parameters) - optional_parameters or len(parameters) > len(sig.parameters):
-                        print(f'ERROR: function not found: {tool_call.function.name}, LHS: {len(parameters)}, RHS: {len(sig.parameters)}')
+                        if self.log_callback is not None:
+                            log_message = f'function not found: {tool_call.function.name}. Incorrect number of parameters.'
+                            self.log_callback(LogType.ERROR, log_message)
+                            # print(f'ERROR: function not found: {tool_call.function.name}, LHS: {len(parameters)}, RHS: {len(sig.parameters)}')
                         message_list.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
@@ -37,7 +47,10 @@ class ToolDispatch:
                         continue
 
                     if 'ticker' in parameters and parameters['ticker'] not in available_assets:
-                        print(f'ERROR: invalid ticker {parameters['ticker']}')
+                        if self.log_callback is not None:
+                            log_message = f'invalid ticker {parameters['ticker']}'
+                            self.log_callback(LogType.ERROR, log_message)
+                            # print(f'ERROR: invalid ticker {parameters['ticker']}')
                         message_list.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
@@ -46,6 +59,14 @@ class ToolDispatch:
                         continue
 
                     call_response = self.dispatch_dictionary[tool_call.function.name](**parameters)
+
+                    if self.tool_status_callback is not None:
+                        tool_log = tool_call.function.name + '('
+                        for item in parameters.values():
+                            tool_log += f'{item},'
+                        tool_log += ')'
+                        self.tool_status_callback(tool_log)
+
                     message_list.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,

@@ -48,6 +48,9 @@ class Portfolio:
 
         self.portfolio_map[ticker].quantity -= amount
 
+        if self.portfolio_map[ticker].quantity <= 0:
+            del self.portfolio_map[ticker]
+
         price = yahoo.real_time_price(ticker)
         total = amount*price
         self.balance += total
@@ -58,6 +61,8 @@ class Portfolio:
     def get_formatted_portfolio(self):
         final_string = f'Uninvested balance: ${self.balance:.2f} \n\n'
 
+        portfolio_value = self.balance
+
         if len(self.portfolio_map) > 0:
             final_string += 'Assets: \n'
             for ticker, possession in self.portfolio_map.items():
@@ -66,8 +71,10 @@ class Portfolio:
                 profit_or_loss = total - possession.purchase_value
                 profit_or_loss_percent = (profit_or_loss / possession.purchase_value) * 100
                 final_string += f'{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) \n'
+                portfolio_value += total
 
             final_string += '\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss'
+            final_string += f'\nTotal portfolio value: ${portfolio_value:.2f}'
         else:
             final_string += 'No assets in portfolio'
 

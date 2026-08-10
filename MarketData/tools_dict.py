@@ -204,7 +204,7 @@ TOOLS_DICT = [
 
 DISPATCH_DICT = {
     'formatted_price': formatted_price,
-    'today_date': today_date,
+    'today_date_time': today_date_time,
     'formatted_historical_data': formatted_historical_data,
     'get_formatted_company_info': get_formatted_company_info,
     'get_formatted_financials_for_past_three_years': get_formatted_financials_for_past_three_years,

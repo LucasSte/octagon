@@ -55,6 +55,7 @@ def formatted_historical_data(ticker, start, end, interval):
         markdown_table += "|----------|------|------|-----|-------|--------|\n"
 
         # Add each row of data
+        print(df_reset)
         for index, row in df_reset.iterrows():
             datetime_str = row['Date'].strftime('%Y-%m-%d %H:%M:%S')
             markdown_table += f"| {datetime_str} | {row['Open']:.2f} | {row['High']:.2f} | {row['Low']:.2f} | {row['Close']:.2f} | {row['Volume']:,.0f} |\n"

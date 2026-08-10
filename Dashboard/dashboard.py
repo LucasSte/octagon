@@ -32,7 +32,7 @@ class OctagonDashboard(App):
             with Horizontal(id="body"):
                 with Vertical(id="left"):
                     yield RichLog(
-                        max_lines=5,
+                        max_lines=6,
                         auto_scroll=True,
                         wrap=False,
                         id="top_left",

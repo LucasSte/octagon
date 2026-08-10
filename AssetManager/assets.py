@@ -9,6 +9,8 @@ class Asset:
 available_assets = {
     'AAPL': Asset('Apple Inc.', 'AAPL'),
     'NVDA': Asset('NVIDIA Corporation', 'NVDA'),
+    'TSLA': Asset('Tesla, Inc.', 'TSLA'),
+    'BA': Asset('The Boeing Company', 'BA'),
 }
 
 def list_available_assets():

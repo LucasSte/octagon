@@ -140,7 +140,7 @@ class OctagonDashboard(App):
 
         if command == "start":
             self.main_log_update(LogType.INFO, 'Starting agent')
-            self.update_assets('None', self.agent.portfolio.balance)
+            self.agent.portfolio.update_interface()
             self.active_worker = self.run_agent()
 
         if command == "stop":

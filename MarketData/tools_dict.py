@@ -88,7 +88,7 @@ TOOLS_DICT = [
                         "description": "Period starting from now in days. Use 1d, 2d or 3d for 1 day, 2 days or 3 days in the past."
                     },
                     "interval": {
-                        "type": "interval",
+                        "type": "string",
                         "description": "Time interval for data points (1m, 2m, 5m, 15m, 30m, 60m or 90m for minutes)."
                     }
                 },

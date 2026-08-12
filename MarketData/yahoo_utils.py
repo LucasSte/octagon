@@ -58,7 +58,7 @@ def get_intraday_historical_data(symbol, period, interval='5m'):
     return df
 
 allowed_intervals = {'1m', '2m', '5m', '30m', '60m', '90m', '1d', '5d', '1wk', '1mo', '3mo'}
-allowed_intraday_intervals = {'1m', '2m', '5m', '30m', '60m', '90m'}
+allowed_intraday_intervals = {'1m', '2m', '5m', '15m', '30m', '60m', '90m'}
 allowed_intraday_periods = {'1d', '2d', '3d'}
 
 def validate_date(date_string):

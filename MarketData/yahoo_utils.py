@@ -45,7 +45,21 @@ def get_historical_data(symbol, start, end, interval='1d'):
 
     return df
 
+@rate_limit(max_per_second=2)
+def get_intraday_historical_data(symbol, period, interval='5m'):
+    """
+        Get historical OHLCV data.
+
+        Intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
+        """
+    ticker = yf.Ticker(symbol)
+    df = ticker.history(period=period, interval=interval)
+
+    return df
+
 allowed_intervals = {'1m', '2m', '5m', '30m', '60m', '90m', '1d', '5d', '1wk', '1mo', '3mo'}
+allowed_intraday_intervals = {'1m', '2m', '5m', '30m', '60m', '90m'}
+allowed_intraday_periods = {'1d', '2d', '3d'}
 
 def validate_date(date_string):
     try:
@@ -172,4 +186,65 @@ def build_financials_table_with_pandas(symbol, income_key, balance_key, cash_flo
     df = pd.DataFrame(data, index=dates).T  # rows = metrics, columns = dates
 
     formatted = df.map(lambda x: f'{x:e}').to_string()
+    return formatted
+
+def format_historical_data_markdown(historical_data):
+    # Reset index to make datetime a column
+    df_reset = historical_data.reset_index()
+
+    # Create markdown table header
+    markdown_table = "| Datetime | Open | High | Low | Close | Volume |\n"
+    markdown_table += "|----------|------|------|-----|-------|--------|\n"
+
+    # Add each row of data
+    for index, row in df_reset.iterrows():
+        if 'Date' in row:
+            datetime_str = row['Date'].strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            datetime_str = row['Datetime'].strftime('%Y-%m-%d %H:%M:%S')
+        markdown_table += f"| {datetime_str} | {row['Open']:.2f} | {row['High']:.2f} | {row['Low']:.2f} | {row['Close']:.2f} | {row['Volume']:,.0f} |\n"
+
+    average_return = df_reset['Close'].pct_change().mean()
+    volatility = df_reset['Close'].pct_change().std()
+    average = df_reset['Close'].mean()
+
+    markdown_table += '\n\n'
+
+    markdown_table += f'Average return: {average_return:.4f}\n'
+    markdown_table += f'Volatility (std): {volatility:.4f}\n'
+    markdown_table += f'Average close price: {average: .4f}\n'
+
+    return markdown_table
+
+def format_historical_data_pandas(historical_data):
+    # Reset index to make datetime a column
+    df_reset = historical_data.reset_index()
+
+    # Build the output dataframe with the columns/formatting you want
+    if 'Date' in df_reset:
+        date_and_time = df_reset['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    else:
+        date_and_time = df_reset['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    result = pd.DataFrame({
+        'Datetime': date_and_time,
+        'Open': df_reset['Open'].round(2),
+        'High': df_reset['High'].round(2),
+        'Low': df_reset['Low'].round(2),
+        'Close': df_reset['Close'].round(2),
+        'Volume': df_reset['Volume'].apply(lambda x: '{:e}'.format(x))
+    })
+
+    formatted = result.to_string()
+
+    average_return = df_reset['Close'].pct_change().mean()
+    volatility = df_reset['Close'].pct_change().std()
+    average = df_reset['Close'].mean()
+
+    formatted += '\n\n'
+
+    formatted += f'Average return: {average_return * 100:.4f}%\n'
+    formatted += f'Volatility (std): {volatility:.4f}\n'
+    formatted += f'Average close price: {average: .4f}\n'
+
     return formatted

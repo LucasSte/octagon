@@ -66,7 +66,38 @@ TOOLS_DICT = [
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted table with historical data. Includes datetime, open, high, low, close, and volume with scientific notation for volume. Also includes average return, volatility, and average close price."
+                "description": "Formatted table with historical data. Includes datetime, open, high, low, close, and volume with scientific notation for volume. "
+                               "Also includes average return, volatility, and average close price. Not available for intraday data."
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "formatted_intraday_data",
+            "description": "Returns intraday stock data for a given period in a table",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "ticker": {
+                        "type": "string",
+                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "Period starting from now in days. Use 1d, 2d or 3d for 1 day, 2 days or 3 days in the past."
+                    },
+                    "interval": {
+                        "type": "interval",
+                        "description": "Time interval for data points (1m, 2m, 5m, 15m, 30m, 60m or 90m for minutes)."
+                    }
+                },
+                "required": ["ticker", "period", "interval"]
+            },
+            "returns": {
+                "type": "string",
+                "description": "Formatted table with intraday data. Includes datetime, open, high, low, close, and volume with scientific notation for volume. "
+                               "Also includes average return, volatility, and average close price."
             }
         }
     },
@@ -206,6 +237,7 @@ DISPATCH_DICT = {
     'formatted_price': formatted_price,
     'today_date_time': today_date_time,
     'formatted_historical_data': formatted_historical_data,
+    'formatted_intraday_data': formatted_intraday_data,
     'get_formatted_company_info': get_formatted_company_info,
     'get_formatted_financials_for_past_three_years': get_formatted_financials_for_past_three_years,
     'get_formatted_financials_for_past_three_quarters': get_formatted_financials_for_past_three_quarters,

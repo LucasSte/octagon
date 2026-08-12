@@ -27,7 +27,6 @@ def today_date_time():
 
 def formatted_historical_data(ticker, start, end, interval):
     """
-    Returns everything as a markdown table
     Dates in YYYY-MM-DD. The end date cannot be the same as the start one, even if you want today's information.
     Intervals: 1, 2, 5, 15, 30, 60 or 90 minutes, 1 or 5 days, 1 week, 1mo, 3mo
     Maximum of ten entries
@@ -46,81 +45,27 @@ def formatted_historical_data(ticker, start, end, interval):
         if end_val != '':
             return end_val
 
-    if not historical_data.empty:
-        # Reset index to make datetime a column
-        df_reset = historical_data.reset_index()
+    if historical_data.empty:
+        return f'No data available for {ticker}'
 
-        # Create markdown table header
-        markdown_table = "| Datetime | Open | High | Low | Close | Volume |\n"
-        markdown_table += "|----------|------|------|-----|-------|--------|\n"
+    return format_historical_data_markdown(historical_data)
 
-        # Add each row of data
-        print(df_reset)
-        for index, row in df_reset.iterrows():
-            datetime_str = row['Date'].strftime('%Y-%m-%d %H:%M:%S')
-            markdown_table += f"| {datetime_str} | {row['Open']:.2f} | {row['High']:.2f} | {row['Low']:.2f} | {row['Close']:.2f} | {row['Volume']:,.0f} |\n"
 
-        average_return = df_reset['Close'].pct_change().mean()
-        volatility = df_reset['Close'].pct_change().std()
-        average = df_reset['Close'].mean()
-
-        markdown_table += '\n\n'
-
-        markdown_table += f'Average return: {average_return:.4f}\n'
-        markdown_table += f'Volatility (std): {volatility:.4f}\n'
-        markdown_table += f'Average close price: {average: .4f}\n'
-
-        return markdown_table
-
-    return f'No data available for {ticker}'
-
-def formatted_historical_data_with_pandas(ticker, start, end, interval):
+def formatted_intraday_data(ticker, period, interval):
     """
-    An alternative to the above function using pandas internal formatter
+    Period as days, and interval only in minutes.
     """
-    if interval not in allowed_intervals:
+    if interval not in allowed_intraday_intervals:
         return f'Invalid interval: {interval}'
-    historical_data = get_historical_data(ticker, start, end, interval)
+    if period not in allowed_intraday_periods:
+        return f'Invalid period: {period}'
 
-    if start is not None:
-        start_val = validate_date(start)
-        if start_val != '':
-            return start_val
+    historical_data = get_intraday_historical_data(ticker, period, interval)
 
-    if end is not None:
-        end_val = validate_date(end)
-        if end_val != '':
-            return end_val
+    if historical_data.empty:
+        return f'Not data available for {ticker}'
 
-    if not historical_data.empty:
-        # Reset index to make datetime a column
-        df_reset = historical_data.reset_index()
-
-        # Build the output dataframe with the columns/formatting you want
-        result = pd.DataFrame({
-            'Datetime': df_reset['Date'].dt.strftime('%Y-%m-%d %H:%M:%S'),
-            'Open': df_reset['Open'].round(2),
-            'High': df_reset['High'].round(2),
-            'Low': df_reset['Low'].round(2),
-            'Close': df_reset['Close'].round(2),
-            'Volume': df_reset['Volume'].apply(lambda x: '{:e}'.format(x))
-        })
-
-        formatted = result.to_string()
-
-        average_return = df_reset['Close'].pct_change().mean()
-        volatility = df_reset['Close'].pct_change().std()
-        average = df_reset['Close'].mean()
-
-        formatted += '\n\n'
-
-        formatted += f'Average return: {average_return*100:.4f}%\n'
-        formatted += f'Volatility (std): {volatility:.4f}\n'
-        formatted += f'Average close price: {average: .4f}\n'
-
-        return formatted
-
-    return f'No data available for {ticker}'
+    return format_historical_data_markdown(historical_data)
 
 def formatted_historical_data_as_plot_figure(
         ticker,

@@ -26,17 +26,25 @@ class OctagonDashboard(App):
         self.agent.set_tool_status_callback(self.tool_status_update)
         self.agent.set_log_callback(self.main_log_update)
         self.agent.set_assets_callback(self.update_assets)
+        self.agent.set_iterations_callback(self.update_iterations)
 
     def compose(self) -> ComposeResult:
         with Vertical(id="root"):
             with Horizontal(id="body"):
                 with Vertical(id="left"):
-                    yield RichLog(
-                        max_lines=6,
-                        auto_scroll=True,
-                        wrap=False,
-                        id="top_left",
-                    )
+                    with Horizontal(id="top_left_row"):
+                        yield RichLog(
+                            max_lines=6,
+                            auto_scroll=True,
+                            wrap=False,
+                            id="top_row_left",
+                        )
+                        yield Static(
+                            Panel("Iterations: 0/0", title="Agent",
+                                  border_style="green", expand=True),
+                            id="top_row_right",
+                        )
+
                     yield RichLog(
                         max_lines=25,
                         auto_scroll=True,
@@ -71,12 +79,18 @@ class OctagonDashboard(App):
         self.query_one("#right").styles.width = "25%"
 
         # Tool panel
-        recent_tools = self.query_one("#top_left", RichLog)
+        recent_tools = self.query_one("#top_row_left", RichLog)
         recent_tools.styles.height = "1fr"
         recent_tools.styles.border = ("round", "cyan")
         recent_tools.styles.border_title_align = "center"
         recent_tools.styles.background = "transparent"
         recent_tools.border_title = "Most recent tool calls"
+        recent_tools.styles.width = "4fr"
+
+        # Agent loops
+        agent_loops = self.query_one("#top_row_right", Static)
+        agent_loops.styles.height = "1fr"
+        agent_loops.styles.width = "1fr"
 
         # Log panel
         recent_messages = self.query_one("#bottom_left", RichLog)
@@ -97,7 +111,7 @@ class OctagonDashboard(App):
         command_box.border_title = "Command Input"
 
     def tool_status_update(self, message: str):
-        log = self.query_one("#top_left", RichLog)
+        log = self.query_one("#top_row_left", RichLog)
         line = Text(message)
         log.write(line)
 
@@ -130,11 +144,18 @@ class OctagonDashboard(App):
                               border_style="red", expand=True)
         )
 
+    def update_iterations(self, current: int, maximum: int):
+        self.query_one("#top_row_right", Static).update(
+            Panel(f'Iterations: {current}/{maximum}', title="Agent",
+                  border_style="green", expand=True)
+        )
+
     def on_input_submitted(self, event: Input.Submitted) -> None:
         command = event.value.strip().lower()
         event.input.value = ""
 
         if command == "quit":
+            self.stop_work()
             self.exit()
             return
 
@@ -145,6 +166,20 @@ class OctagonDashboard(App):
 
         if command == "stop":
             self.stop_work()
+
+        if command == "save":
+            if self.active_worker is not None:
+                self.main_log_update(LogType.ERROR, 'Cannot save portfolio while agent is running')
+            else:
+                self.agent.portfolio.save()
+                self.main_log_update(LogType.INFO, 'Successfully saved portfolio in portfolio.json')
+
+        if command == "load":
+            if self.active_worker is not None:
+                self.main_log_update(LogType.ERROR, 'Cannot load portfolio while agent is running')
+            else:
+                self.agent.portfolio.load()
+                self.main_log_update(LogType.INFO, 'Successfully loaded portfolio.json')
 
     def stop_work(self):
         if self.active_worker is not None:

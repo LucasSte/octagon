@@ -89,7 +89,9 @@ class TestPortfolio(unittest.TestCase):
         result = self.portfolio.sell_item('AAPL', 5)
         
         # Check return message
-        self.assertEqual(result, 'Only 2.00 units of AAPL is available to sell')
+        self.assertEqual(result, 'Selling all 2.00 of AAPL, since the request amount of 2 is greater than '
+                                 'the current holdings. Sold 2 units of AAPL at $120.00. You new uninvested balance '
+                                 'is $1020.00.')
     
     @patch('AssetManager.portfolio.yahoo.real_time_price')
     def test_sell_item_success(self, mock_price):
@@ -139,6 +141,25 @@ class TestPortfolio(unittest.TestCase):
             self.assertIn('AAPL (Apple Inc.): 100.00 <=> $200.00 <=> $-320.00 (-61.54%)', result)
             self.assertIn('MSFT (Microsoft Corporation): 50.00 <=> $100.00 <=> $52.00 (108.33%)', result)
             self.assertIn('Legend for assets:', result)
+
+    def test_save_and_load_portfolio(self):
+        my_map = {
+            'AAPL': Possession(quantity=100.0, purchase_value=520),
+            'MSFT': Possession(quantity=50.0, purchase_value=48)
+        }
+        self.portfolio.portfolio_map = my_map
+        self.portfolio.balance = 20.50
+
+        self.portfolio.save()
+
+        self.portfolio.portfolio_map = dict()
+        self.portfolio.balance = 0.0
+
+        self.portfolio.load()
+
+        self.assertEqual(self.portfolio.balance, 20.50)
+        self.assertEqual(self.portfolio.portfolio_map, my_map)
+
 
 if __name__ == '__main__':
     unittest.main()

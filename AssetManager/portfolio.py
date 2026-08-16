@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from MarketData import yahoo
 from AssetManager.assets import available_assets
 from typing import Callable
+import json
 
 
 @dataclass
@@ -13,7 +14,7 @@ class Portfolio:
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
         self.balance = balance
         self.portfolio_map = portfolio_map
-        self.interface_callback = Callable | None
+        self.interface_callback: Callable | None = None
 
     def get_balance(self):
         return f'Your uninvested balance is ${self.balance:.2f}'
@@ -43,8 +44,11 @@ class Portfolio:
 
         possession = self.portfolio_map[ticker]
 
+        message = ''
         if possession.quantity < amount:
-            return f'Only {possession.quantity:.2f} units of {ticker} is available to sell'
+            amount = possession.quantity
+            message += (f'Selling all {possession.quantity:.2f} of {ticker}, since the request amount of {amount} '
+                        f'is greater than the current holdings. ')
 
         self.portfolio_map[ticker].quantity -= amount
 
@@ -56,7 +60,9 @@ class Portfolio:
         self.balance += total
 
         self.update_interface()
-        return f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
+        message += f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'
+
+        return message
 
     def get_formatted_portfolio(self):
         final_string = f'Uninvested balance: ${self.balance:.2f} \n\n'
@@ -105,3 +111,28 @@ class Portfolio:
                 interface_message += f'{possession.quantity} X {ticker}\n'
 
         self.interface_callback(interface_message, self.balance)
+
+    def save(self):
+        assets = {}
+        for ticker, possession in self.portfolio_map.items():
+            assets[ticker] = {'quantity': possession.quantity, 'purchase_price': possession.purchase_value}
+        dump_dict = {
+            'Uninvested balance': self.balance,
+            'Assets': assets,
+        }
+
+        with open('portfolio.json', 'w') as f:
+            json.dump(dump_dict, f)
+
+
+    def load(self):
+        with open('portfolio.json', 'r') as f:
+            json_data = json.load(f)
+
+        self.balance = json_data['Uninvested balance']
+        json_assets = json_data['Assets']
+        for ticker, possession in json_assets.items():
+            self.portfolio_map[ticker] = Possession(
+                purchase_value=possession['purchase_price'],
+                quantity=possession['quantity'],
+            )

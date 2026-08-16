@@ -17,7 +17,8 @@ class TraderAgent:
         self.available_tools = MarketData.tools_dict.TOOLS_DICT + AssetManager.tools_dict.TOOLS_DICT
         self.dispatcher = ToolDispatch(self.portfolio)
 
-        self.log_callback = Callable | None
+        self.log_callback: Callable | None = None
+        self.iterations_callback: Callable | None = None
 
     def set_tool_status_callback(self, callback: Callable):
         # message
@@ -31,6 +32,10 @@ class TraderAgent:
     def set_assets_callback(self, callback: Callable):
         # Assets, balance
         self.portfolio.set_interface_callback(callback)
+
+    def set_iterations_callback(self, callback: Callable):
+        # Current iteration, maximum iterations
+        self.iterations_callback = callback
 
     def agent_loop(self, should_stop):
         content = [
@@ -48,6 +53,10 @@ class TraderAgent:
         ]
 
         for i in range(self.rounds):
+
+            if self.iterations_callback is not None:
+                self.iterations_callback(i+1, self.rounds)
+
             if should_stop():
                 break
 

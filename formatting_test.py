@@ -1,4 +1,6 @@
-from MarketData.yahoo import *
+# from MarketData.yahoo import *
+from AnalysisTools.kalman_fair_value import kalman_fair_value
+
 
 ticker = 'AAPL'
 
@@ -28,5 +30,8 @@ ticker = 'AAPL'
 # print('Get options activity clusters')
 # print(get_options_activity_simple_threshold_clusters(ticker))
 
-print('Analyst Data')
-print(get_formatted_analyst_data(ticker))
+# print('Analyst Data')
+# print(get_formatted_analyst_data(ticker))
+
+print('Kalman fair value')
+print(kalman_fair_value(ticker, '5d', '60m', 'level'))

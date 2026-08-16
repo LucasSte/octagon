@@ -220,7 +220,7 @@ def format_historical_data_pandas(historical_data):
     # Reset index to make datetime a column
     df_reset = historical_data.reset_index()
 
-    # Build the output dataframe with the columns/formatting you want
+    # Build the output dataframe with the columns/formatting we want
     if 'Date' in df_reset:
         date_and_time = df_reset['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
     else:

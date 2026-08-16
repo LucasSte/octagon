@@ -16,6 +16,10 @@ random-walk view of prices. Any apparent predictive edge here comes purely
 from the trend term persisting, which is a strong and often wrong
 assumption for financial prices over more than a few steps ahead.
 
+
+Why not https://colab.research.google.com/gist/janlukasschroeder/a1979bc74897eb7857780810104b4c82/fama-french-factor-model.ipynb#scrollTo=H8LQ3T_02hA1
+ 
+
 Requirements:
     pip install yfinance numpy pandas matplotlib pykalman
 """

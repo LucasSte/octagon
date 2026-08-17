@@ -1,5 +1,6 @@
 # from MarketData.yahoo import *
 from AnalysisTools.kalman_fair_value import kalman_fair_value
+from AnalysisTools.kalman_predictor import kalman_predictor
 from AnalysisTools.markov_chain_regime import markov_chain_regime
 
 ticker = 'NVDA'
@@ -36,5 +37,8 @@ ticker = 'NVDA'
 # print('Kalman fair value')
 # print(kalman_fair_value(ticker, '5d', '60m', 'level'))
 
-print('Markov chain regime')
-print(markov_chain_regime(ticker, 3))
+# print('Markov chain regime')
+# print(markov_chain_regime(ticker, 3))
+
+print('Kalman predictor')
+print(kalman_predictor(ticker))

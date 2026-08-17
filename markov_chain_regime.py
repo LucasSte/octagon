@@ -132,7 +132,7 @@ def backtest(df: pd.DataFrame) -> pd.DataFrame:
 if __name__ == "__main__":
     TICKER = "EXFY"
     START = "2026-04-01"
-    N_STATES = 2
+    N_STATES = 3
 
     df = fetch_and_prepare(TICKER, START, vol_window=10)
     model, hidden_states = fit_hmm(df, n_states=N_STATES, n_iter=1000)
@@ -146,8 +146,7 @@ if __name__ == "__main__":
     print(model.transmat_)
 
     df = build_regime_filtered_signal(df, hidden_states, labels,
-                                       fast_window=20, slow_window=50,
-                                       allowed_regimes=("bull/low-vol",))
+                                       fast_window=20, slow_window=50)
     df = backtest(df)
 
     print("\n", df[["price", "regime_label", "raw_signal", "filtered_position",

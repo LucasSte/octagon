@@ -146,6 +146,7 @@ def kalman_fair_value(ticker, period, interval, method):
     df = build_signals(df, entry_z=1.5, exit_z=0.3, z_window=20)
     df = backtest(df)
 
+    # TODO: comment here
     filtered = df[['datetime','price', 'fair_value', 'zscore', 'position', 'cum_ret']].tail(15)
 
     formatted_response += filtered.to_string(index=False)

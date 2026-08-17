@@ -1,8 +1,8 @@
 # from MarketData.yahoo import *
 from AnalysisTools.kalman_fair_value import kalman_fair_value
+from AnalysisTools.markov_chain_regime import markov_chain_regime
 
-
-ticker = 'AAPL'
+ticker = 'NVDA'
 
 # print('Formatted price')
 # print(formatted_price(ticker))
@@ -33,5 +33,8 @@ ticker = 'AAPL'
 # print('Analyst Data')
 # print(get_formatted_analyst_data(ticker))
 
-print('Kalman fair value')
-print(kalman_fair_value(ticker, '5d', '60m', 'level'))
+# print('Kalman fair value')
+# print(kalman_fair_value(ticker, '5d', '60m', 'level'))
+
+print('Markov chain regime')
+print(markov_chain_regime(ticker, 3))

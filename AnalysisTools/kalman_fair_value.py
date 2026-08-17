@@ -146,8 +146,16 @@ def kalman_fair_value(ticker, period, interval, method):
     df = build_signals(df, entry_z=1.5, exit_z=0.3, z_window=20)
     df = backtest(df)
 
-    # TODO: comment here
-    filtered = df[['datetime','price', 'fair_value', 'zscore', 'position', 'cum_ret']].tail(15)
+    # Add user-friendly labels
+    position_labels = {
+        1: "Long",
+        0: "Flat",
+        -1: "Short",
+    }
+    df["position"] = df["position"].map(position_labels)
+    df.rename(columns={'fair_value': 'fair value'}, inplace=True)
+
+    filtered = df[['datetime', 'price', 'fair value', 'position']].tail(15)
 
     formatted_response += filtered.to_string(index=False)
 

@@ -81,25 +81,31 @@ def backtest(df: pd.DataFrame) -> pd.DataFrame:
     df["filtered_cum"] = (1 + df["filtered_ret"]).cumprod() - 1
     return df
 
-def markov_chain_regime(ticker, interval, states):
-    if interval not in {'1d', '60m'}:
-        return f'Invalid interval: {interval}'
+def markov_chain_regime(ticker, states):
+    # if interval not in {'1d', '60m'}:
+    #     return f'Invalid interval: {interval}'
 
-    if states != 2 or states != 3:
+    if states != 2 and states != 3:
         return f'Invalid number of states: {states}'
 
-    price = yf.download(ticker, period='90d', interval=interval, auto_adjust=True)['Close'].dropna()
+    # if interval == '1d':
+    #     period = '360d'
+    # else:
+    #     period = '180d'
+
+    price = yf.download(ticker, period='360d', interval='1d', auto_adjust=True)["Close"].dropna().squeeze()
     df = pd.DataFrame({"price": price})
     df["log_return"] = np.log(df["price"]).diff()
     df["volatility"] = df["log_return"].rolling(10).std()
 
     # flag and null out returns across large time gaps (overnight/weekend)
-    time_gap_hours = df.index.to_series().diff().dt.total_seconds() / 3600.0
-    df.loc[time_gap_hours > 3.0, "log_return"] = np.nan
+    # if interval == '60m':
+    #     time_gap_hours = df.index.to_series().diff().dt.total_seconds() / 3600.0
+    #     df.loc[time_gap_hours > 3.0, "log_return"] = np.nan
 
     df = df.dropna()
     model, hidden_states = fit_hmm(df, n_states=states, n_iter=1000)
-    labels = label_regimes(model, hidden_states)
+    labels = label_regimes(model)
 
     df = build_regime_filtered_signal(df, hidden_states, labels,
                                       fast_window=20, slow_window=50)
@@ -109,6 +115,9 @@ def markov_chain_regime(ticker, interval, states):
     for state, label in labels.items():
         formatted_response += f"  {label} (state {state}): mean = {model.means_[state]}\n\n"
 
-    # TODO: Comment on the meaning here
+    selected_entries = df[["price", "regime_label", "raw_signal",
+                           "filtered_position", "unfiltered_cum", "filtered_cum"]].tail(15)
+
+    formatted_response +=  selected_entries.to_string()
 
     return formatted_response

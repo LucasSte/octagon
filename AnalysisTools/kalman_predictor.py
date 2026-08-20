@@ -52,7 +52,7 @@ def forecast_ahead(kf: KalmanFilter, last_mean: np.ndarray, last_cov: np.ndarray
 def kalman_predictor(ticker):
     horizon = 10
 
-    price = yf.download(ticker, period='2d', interval='1m', auto_adjust=True)["Close"].dropna().squeeze()
+    price = yf.download(ticker, period='2d', interval='1m', auto_adjust=True, progress=False)["Close"].dropna().squeeze()
     kf, state_means, state_covs = fit_trend_model(price.values, n_iter=20)
 
     level_est = state_means[:, 0]

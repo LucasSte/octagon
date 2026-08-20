@@ -93,7 +93,7 @@ def markov_chain_regime(ticker, states):
     # else:
     #     period = '180d'
 
-    price = yf.download(ticker, period='360d', interval='1d', auto_adjust=True)["Close"].dropna().squeeze()
+    price = yf.download(ticker, period='360d', interval='1d', auto_adjust=True, progress=False)["Close"].dropna().squeeze()
     df = pd.DataFrame({"price": price})
     df["log_return"] = np.log(df["price"]).diff()
     df["volatility"] = df["log_return"].rolling(10).std()
@@ -113,8 +113,9 @@ def markov_chain_regime(ticker, states):
 
     formatted_response = "\nFitted regime means [log_return, volatility]:\n"
     for state, label in labels.items():
-        formatted_response += f"  {label} (state {state}): mean = {model.means_[state]}\n\n"
+        formatted_response += f"  {label} (state {state}): mean = {model.means_[state]}\n"
 
+    formatted_response += '\n'
     selected_entries = df[["price", "regime_label", "raw_signal",
                            "filtered_position", "unfiltered_cum", "filtered_cum"]].tail(15)
 

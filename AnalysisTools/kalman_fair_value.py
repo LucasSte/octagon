@@ -114,7 +114,7 @@ def kalman_fair_value(ticker, period, interval, method):
     if period not in {'5d', '6d', '7d', '8d', '9d', '10d'}:
         return f'Invalid period: {period}'
 
-    data = yf.download(ticker, period=period, interval=interval, auto_adjust=True)["Close"]
+    data = yf.download(ticker, period=period, interval=interval, auto_adjust=True, progress=False)["Close"]
     data = data.dropna().squeeze()
 
     formatted_response = ''

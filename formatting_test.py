@@ -1,4 +1,5 @@
 # from MarketData.yahoo import *
+from AnalysisTools.fama_french_factor import fama_french_factor
 from AnalysisTools.kalman_fair_value import kalman_fair_value
 from AnalysisTools.kalman_predictor import kalman_predictor
 from AnalysisTools.markov_chain_regime import markov_chain_regime
@@ -40,5 +41,8 @@ ticker = 'NVDA'
 # print('Markov chain regime')
 # print(markov_chain_regime(ticker, 3))
 
-print('Kalman predictor')
-print(kalman_predictor(ticker))
+# print('Kalman predictor')
+# print(kalman_predictor(ticker))
+
+print('Fama french factor')
+print(fama_french_factor(ticker, '5factor', 'daily'))

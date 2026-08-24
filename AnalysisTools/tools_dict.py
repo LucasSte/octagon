@@ -1,46 +1,79 @@
-from MarketData.yahoo import *
 """
 Dictionary containing descriptions of functions for use by language models.
-These functions are designed to be used as tools by agents to provide financial data.
+These functions are designed to be used as tools by agents to provide financial analysis.
 """
 
 TOOLS_DICT = [
     {
         "type": "function",
         "function": {
-            "name": "formatted_price",
-            "description": "Return ticker current price of an asset",
+            "name": "fama_french_factor",
+            "description": "Calculates and returns the market risk (MKT), size (SMB), value (HML) for the three factor"
+                           " model. In addition to those, the function returns the profitability (RMW) and the "
+                           "investment (CMA) for the five factor model.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "ticker": {
                         "type": "string",
                         "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                    }
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "Pass '3factor' to use the three factor model, or '5factor' to use the five "
+                                       "factor model."
+                    },
+                    "frequency": {
+                        "type": "string",
+                        "description": "Pass 'daily' to calculate the factors with daily data or 'monthly' for a "
+                                       "monthly cadence."
+                    },
                 },
-                "required": ["ticker"]
+                "required": ["ticker", "model", "frequency"]
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted string with ticker symbol and current price (e.g., 'AAPL: $150.25')"
+                "description": "Formatted table with the calculated factors."
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "today_date_time",
-            "description": "Returns today's date and current time.",
+            "name": "kalman_fair_value",
+            "description": "Use a Kalman filter to estimate the fair price of a stock, and potentially identify if it "
+                           "is over or undervalued. It may also serve to estimate hedge ratios or spreads in "
+                           "pairs/statistical-arbitrage trading.",
+            "parameters": {
+                "ticker": {
+                    "type": "string",
+                    "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
+                },
+                "period": {
+                    "type": "string",
+                    "description": "The amount of days on which to fit a Kalaman filter parameters. The allowed "
+                                   "values are 5d, 6d, 7d, 8d, 9d or 10d."
+                },
+                "interval": {
+                    "type": "string",
+                    "description": "The interval used to calculate the fair value. Allowed values are 1d for one day, "
+                                   "60m, 30m, and 15m for 60, 30, and 15 minutes."
+                },
+                "method": {
+                    "type": "string",
+                    "description": "Use 'level' for a local level model, or 'linear' for a local linear trend model.",
+                }
+            },
             "returns": {
                 "type": "string",
-                "description": "Current date and time in New York timezone formatted as 'Today's date (YYYY-MM-DD HH:MM): YYYY-MM-DD HH:MM'"
+                "description": "The kalman fair value for the last 15 entries beginning from the last captured price."
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "formatted_historical_data",
+            "name": "markov_chain_regime====WRONG!",
             "description": "Returns historical stock data for a given period in a table",
             "parameters": {
                 "type": "object",
@@ -232,16 +265,3 @@ TOOLS_DICT = [
         }
     }
 ]
-
-DISPATCH_DICT = {
-    'formatted_price': formatted_price,
-    'today_date_time': today_date_time,
-    'formatted_historical_data': formatted_historical_data,
-    'formatted_intraday_data': formatted_intraday_data,
-    'get_formatted_company_info': get_formatted_company_info,
-    'get_formatted_financials_for_past_three_years': get_formatted_financials_for_past_three_years,
-    'get_formatted_financials_for_past_three_quarters': get_formatted_financials_for_past_three_quarters,
-    'get_options_chain': get_options_chain,
-    'get_options_activity_simple_threshold_clusters': get_options_activity_simple_threshold_clusters,
-    'get_formatted_analyst_data': get_formatted_analyst_data,
-}

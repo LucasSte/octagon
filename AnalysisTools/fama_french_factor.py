@@ -145,7 +145,7 @@ def fama_french_factor(ticker, model, frequency):
 
     factors = fetch_ff_factors(model=model, frequency=frequency, start=fetch_start)
     stock_returns = fetch_stock_returns(ticker, start=fetch_start, frequency=frequency)
-    if ((frequency == 'daily' and len(stock_returns) < fetch_years_back*250)
+    if ((frequency == 'daily' and len(stock_returns) < fetch_years_back*240)
             or (frequency == 'monthly' and len(stock_returns) < fetch_years_back*12)):
         return f'Fama french factor unavailable for ticker {ticker}'
 

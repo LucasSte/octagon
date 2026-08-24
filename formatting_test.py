@@ -42,11 +42,11 @@ ticker = 'NVDA'
 # print('Markov chain regime')
 # print(markov_chain_regime(ticker, 3))
 
-print('Particle filter')
-print(particle_filter_forecast(ticker, '1m'))
+# print('Particle filter')
+# print(particle_filter_forecast(ticker, '1m'))
 
-# print('Fama french factor')
-# print(fama_french_factor(ticker, '5factor', 'daily'))
+print('Fama french factor')
+print(fama_french_factor(ticker, '5factor', 'daily'))
 
 # print('Stocktwits sentiment analysis')
 # print(stocktwits_sentiments(ticker))

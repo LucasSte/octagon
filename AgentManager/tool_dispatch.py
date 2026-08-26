@@ -5,14 +5,16 @@ from typing import Callable
 from AssetManager.portfolio import Portfolio
 import MarketData.tools_dict
 import AssetManager.tools_dict
+import AnalysisTools.tools_dict
 from AssetManager.assets import available_assets
 from Dashboard.log_type import LogType
 
 class ToolDispatch:
     def __init__(self, portfolio: Portfolio):
         self.dispatch_dictionary = (Portfolio.build_dispatch_dict(portfolio) |
-                               MarketData.tools_dict.DISPATCH_DICT |
-                               AssetManager.tools_dict.DISPATCH_DICT)
+                                    MarketData.tools_dict.DISPATCH_DICT |
+                                    AssetManager.tools_dict.DISPATCH_DICT |
+                                    AnalysisTools.tools_dict.DISPATCH_DICT)
 
         self.log_callback: Callable | None = None
         self.tool_status_callback: Callable | None = None

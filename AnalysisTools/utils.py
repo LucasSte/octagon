@@ -7,3 +7,5 @@ def wait(seconds: int):
     :return:
     """
     time.sleep(seconds)
+
+    return f'Waited {seconds}'

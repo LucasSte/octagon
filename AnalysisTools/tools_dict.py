@@ -2,6 +2,12 @@
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents to provide financial analysis.
 """
+from AnalysisTools.fama_french_factor import fama_french_factor
+from AnalysisTools.kalman_fair_value import kalman_fair_value
+from AnalysisTools.markov_chain_regime import markov_chain_regime
+from AnalysisTools.particle_filter import particle_filter_forecast
+from AnalysisTools.stocktwits import stocktwits_sentiments
+from AnalysisTools.utils import wait
 
 TOOLS_DICT = [
     {
@@ -73,8 +79,8 @@ TOOLS_DICT = [
     {
         "type": "function",
         "function": {
-            "name": "markov_chain_regime====WRONG!",
-            "description": "Returns historical stock data for a given period in a table",
+            "name": "markov_chain_regime",
+            "description": "Use a hidden markov model to identify distinct regimes in the asset.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -82,33 +88,27 @@ TOOLS_DICT = [
                         "type": "string",
                         "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
                     },
-                    "start": {
-                        "type": "string",
-                        "description": "Start date in YYYY-MM-DD format"
+                    "states": {
+                        "type": "number",
+                        "description": "The number of regimes to identify. It can be either two (bear/high-vol and "
+                                       "bull/low-vol) or three (bear, choppy, and bull). Use numbers 2 or 3 in this "
+                                       "parameter."
                     },
-                    "end": {
-                        "type": "string",
-                        "description": "End date in YYYY-MM-DD format"
-                    },
-                    "interval": {
-                        "type": "string",
-                        "description": "Time interval for data points (1m, 2m, 5m, 15m, 30m, 60m or 90m for minutes, 1d or 5d for days, 1w for week, 1mo, 3mo for months)"
-                    }
                 },
-                "required": ["ticker", "start", "end", "interval"]
+                "required": ["ticker", "states"]
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted table with historical data. Includes datetime, open, high, low, close, and volume with scientific notation for volume. "
-                               "Also includes average return, volatility, and average close price. Not available for intraday data."
+                "description": "A formatted table containing the datetime, price, regime label, raw signal,"
+                               " filtered position, unfiltered cumulative return, and filtered cumulative return."
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "formatted_intraday_data",
-            "description": "Returns intraday stock data for a given period in a table",
+            "name": "particle_filter_forecast",
+            "description": "Use a particle filter model to estimate price movements in a give asset.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -116,29 +116,27 @@ TOOLS_DICT = [
                         "type": "string",
                         "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
                     },
-                    "period": {
+                    "granularity": {
                         "type": "string",
-                        "description": "Period starting from now in days. Use 1d, 2d or 3d for 1 day, 2 days or 3 days in the past."
+                        "description": "The granularity of time for which to estimate. Use '1d' to estimate for future "
+                                       "days, '1h' for upcoming hours, and '1m' for upcoming minutes."
                     },
-                    "interval": {
-                        "type": "string",
-                        "description": "Time interval for data points (1m, 2m, 5m, 15m, 30m, 60m or 90m for minutes)."
-                    }
                 },
-                "required": ["ticker", "period", "interval"]
+                "required": ["ticker", "granularity"]
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted table with intraday data. Includes datetime, open, high, low, close, and volume with scientific notation for volume. "
-                               "Also includes average return, volatility, and average close price."
+                "description": "A formatted table containing the future datetime, the forecasted median without drift, "
+                               "the forecasted median with drift (assuming the detected trends continues), the "
+                               " 5% and 95% confidence interval, and the expected volatility."
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "get_formatted_company_info",
-            "description": "Returns company information formatted for LLM",
+            "name": "stocktwits_sentiments",
+            "description": "Analyse the sentiment (bullish or bearish) of messages on stocktwits.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -151,117 +149,39 @@ TOOLS_DICT = [
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted company information including name, sector, industry, market capitalization, PE ratios, dividend yield, beta, and 52-week high/low"
+                "description": "The number and percentage of messages labeled as bullish, bearish and unlabeled "
+                               "messages."
             }
         }
     },
     {
         "type": "function",
         "function": {
-            "name": "get_formatted_financials_for_past_three_years",
-            "description": "Returns financial data for the past three years",
+            "name": "wait",
+            "description": "Wait a number of second to monitor the market later.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "The stock ticker symbol (e.g., NVDA)"
+                    "seconds": {
+                        "type": "number",
+                        "description": "The number of seconds to wait."
                     }
                 },
                 "required": ["symbol"]
             },
             "returns": {
                 "type": "string",
-                "description": "Formatted financial data including total revenue, gross profit, net income, EBITDA, total assets, and free cash flow for the past three years"
+                "description": "A message confirming the waited time."
             }
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_formatted_financials_for_past_three_quarters",
-            "description": "Returns financial data for the past three quarters",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                    }
-                },
-                "required": ["symbol"]
-            },
-            "returns": {
-                "type": "string",
-                "description": "Formatted financial data including total revenue, gross profit, net income, EBITDA, total assets, and free cash flow for the past three quarters"
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_options_chain",
-            "description": "Returns the top 5 calls and top 5 puts per volume for a given stock",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                    },
-                    "expiration_date": {
-                        "type": "string",
-                        "description": "Expiration date (optional). Uses the most recent one if none provided"
-                    }
-                },
-                "required": ["symbol"]
-            },
-            "returns": {
-                "type": "string",
-                "description": "Formatted table showing top 5 calls and top 5 puts sorted by volume, including strike price, last price, volume, open interest, and implied volatility"
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_options_activity_simple_threshold_clusters",
-            "description": "Returns option chains cluster statistical outliers whose z score is greater than one",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                    }
-                },
-                "required": ["symbol"]
-            },
-            "returns": {
-                "type": "string",
-                "description": "Formatted table showing the top 5 option chains with highest activity scores, including expiration date, days to expiration, total volume, total open interest, and activity score"
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_formatted_analyst_data",
-            "description": "Returns analyst recommendations, upgrades/downgrades, and price targets",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "symbol": {
-                        "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                    }
-                },
-                "required": ["symbol"]
-            },
-            "returns": {
-                "type": "string",
-                "description": "Formatted analyst data including recommendations, five most recent upgrades/downgrades, and price targets (low, mean, high, current)"
-            }
-        }
-    }
 ]
+
+DISPATCH_DICT = {
+    'fama_french_factor': fama_french_factor,
+    'kalman_fair_value': kalman_fair_value,
+    'markov_chain_regime': markov_chain_regime,
+    'particle_filter_forecast': particle_filter_forecast,
+    'stocktwits_sentiments': stocktwits_sentiments,
+    'wait': wait,
+}

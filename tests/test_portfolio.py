@@ -2,7 +2,8 @@ import unittest
 from unittest.mock import patch
 
 from AssetManager.assets import Asset
-from AssetManager.portfolio import Portfolio, Possession
+from AssetManager.portfolio import Portfolio, Possession, Purchase
+
 
 class TestPortfolio(unittest.TestCase):
     
@@ -144,8 +145,16 @@ class TestPortfolio(unittest.TestCase):
 
     def test_save_and_load_portfolio(self):
         my_map = {
-            'AAPL': Possession(quantity=100.0, purchase_value=520),
-            'MSFT': Possession(quantity=50.0, purchase_value=48)
+            'AAPL': Possession(
+                quantity=100.0,
+                purchase_value=520,
+                purchase_history=[Purchase(price=20.4, amount=90.4)]
+            ),
+            'MSFT': Possession(
+                quantity=50.0,
+                purchase_value=48,
+                purchase_history=[Purchase(price=90.4, amount=89.4), Purchase(price=383.234, amount=213.45)]
+            ),
         }
         self.portfolio.portfolio_map = my_map
         self.portfolio.balance = 20.50

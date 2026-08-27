@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from MarketData import yahoo
 from AssetManager.assets import available_assets
 from typing import Callable
@@ -143,7 +144,12 @@ class Portfolio:
     def save(self):
         assets = {}
         for ticker, possession in self.portfolio_map.items():
-            assets[ticker] = {'quantity': possession.quantity, 'purchase_price': possession.purchase_value}
+            purchase_history = [{'price': item.price, 'amount': item.amount} for item in possession.purchase_history]
+            assets[ticker] = {
+                'quantity': possession.quantity,
+                'purchase_price': possession.purchase_value,
+                'purchase_history': purchase_history,
+            }
         dump_dict = {
             'Uninvested balance': self.balance,
             'Assets': assets,
@@ -160,7 +166,10 @@ class Portfolio:
         self.balance = json_data['Uninvested balance']
         json_assets = json_data['Assets']
         for ticker, possession in json_assets.items():
+            json_history = possession['purchase_history']
+            formatted_history = [Purchase(price=item['price'], amount=item['amount']) for item in json_history]
             self.portfolio_map[ticker] = Possession(
                 purchase_value=possession['purchase_price'],
                 quantity=possession['quantity'],
+                purchase_history=formatted_history,
             )

@@ -65,7 +65,7 @@ class TraderAgent:
 
             chat_response = self.client.chat.completions.create(
                 model="Ternary-Bonsai-27B-Q2_0.gguf",
-                # model="maple-2bit-mlx",
+                # model="qwen3.8-27b",
                 messages=messages,
                 tools=self.available_tools,
                 max_tokens=8196,

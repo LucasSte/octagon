@@ -6,9 +6,15 @@ import json
 
 
 @dataclass
+class Purchase:
+    price: float
+    amount: float
+
+@dataclass
 class Possession:
     quantity: float
     purchase_value: float
+    purchase_history: list[Purchase]
 
 class Portfolio:
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
@@ -32,7 +38,11 @@ class Portfolio:
             self.portfolio_map[ticker].quantity += amount
             self.portfolio_map[ticker].purchase_value += total
         else:
-            self.portfolio_map[ticker] = Possession(quantity=amount, purchase_value=total)
+            self.portfolio_map[ticker] = Possession(
+                quantity=amount,
+                purchase_value=total,
+                purchase_history=[Purchase(price=price, amount=amount)]
+            )
 
         self.update_interface()
         return f'Bought {amount} units of {ticker} at ${total:.2f}. Your new uninvested balance is ${self.balance:.2f}.'
@@ -58,6 +68,24 @@ class Portfolio:
         price = yahoo.real_time_price(ticker)
         total = amount*price
         self.balance += total
+
+        working_amount = amount
+        ticker_history = self.portfolio_map[ticker].purchase_history
+        ticker_purchase_value = self.portfolio_map[ticker].purchase_value
+
+        while working_amount > 0.0:
+            if ticker_history[0].amount <= working_amount:
+                working_amount -= ticker_history[0].amount
+                ticker_purchase_value -= ticker_history[0].amount * ticker_history[0].price
+                ticker_history.pop(0)
+            else:
+                ticker_purchase_value -= working_amount * ticker_history[0].price
+                ticker_history[0].amount -= working_amount
+                working_amount = 0.0
+
+
+        self.portfolio_map[ticker].purchase_value = ticker_purchase_value
+        self.portfolio_map[ticker].purchase_history = ticker_history
 
         self.update_interface()
         message += f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'

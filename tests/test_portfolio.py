@@ -160,6 +160,19 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(self.portfolio.balance, 20.50)
         self.assertEqual(self.portfolio.portfolio_map, my_map)
 
+    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    def test_purchase_value(self, mock_price):
+        mock_price.return_value = 50.0
+        self.portfolio.buy_item('AAPL', 1)
+        mock_price.return_value = 60.0
+        self.portfolio.buy_item('AAPL', 2)
+        self.assertEqual(self.portfolio.portfolio_map['AAPL'].purchase_value, 170.0)
+
+        mock_price.return_value = 80.0
+        self.portfolio.sell_item('AAPL', 1)
+        self.assertEqual(self.portfolio.portfolio_map['AAPL'].purchase_value, 120.0)
+
+
 
 if __name__ == '__main__':
     unittest.main()

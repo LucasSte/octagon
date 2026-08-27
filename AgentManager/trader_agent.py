@@ -68,7 +68,7 @@ class TraderAgent:
                 # model="maple-2bit-mlx",
                 messages=messages,
                 tools=self.available_tools,
-                max_tokens=4096,
+                max_tokens=8196,
                 temperature=0.7,
                 top_p=0.95,
                 extra_body={

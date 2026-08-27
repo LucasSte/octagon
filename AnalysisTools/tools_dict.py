@@ -51,23 +51,26 @@ TOOLS_DICT = [
                            "is over or undervalued. It may also serve to estimate hedge ratios or spreads in "
                            "pairs/statistical-arbitrage trading.",
             "parameters": {
-                "ticker": {
-                    "type": "string",
-                    "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
-                },
-                "period": {
-                    "type": "string",
-                    "description": "The amount of days on which to fit a Kalaman filter parameters. The allowed "
-                                   "values are 5d, 6d, 7d, 8d, 9d or 10d."
-                },
-                "interval": {
-                    "type": "string",
-                    "description": "The interval used to calculate the fair value. Allowed values are 1d for one day, "
-                                   "60m, 30m, and 15m for 60, 30, and 15 minutes."
-                },
-                "method": {
-                    "type": "string",
-                    "description": "Use 'level' for a local level model, or 'linear' for a local linear trend model.",
+                "type": "object",
+                "properties": {
+                    "ticker": {
+                        "type": "string",
+                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
+                    },
+                    "period": {
+                        "type": "string",
+                        "description": "The amount of days on which to fit a Kalaman filter parameters. The allowed "
+                                       "values are 5d, 6d, 7d, 8d, 9d or 10d."
+                    },
+                    "interval": {
+                        "type": "string",
+                        "description": "The interval used to calculate the fair value. Allowed values are 1d for one day, "
+                                       "60m, 30m, and 15m for 60, 30, and 15 minutes."
+                    },
+                    "method": {
+                        "type": "string",
+                        "description": "Use 'level' for a local level model, or 'linear' for a local linear trend model.",
+                    },
                 },
                 "required": ["ticker", "period", "interval", "method"],
             },

@@ -68,7 +68,8 @@ TOOLS_DICT = [
                 "method": {
                     "type": "string",
                     "description": "Use 'level' for a local level model, or 'linear' for a local linear trend model.",
-                }
+                },
+                "required": ["ticker", "period", "interval", "method"],
             },
             "returns": {
                 "type": "string",
@@ -80,7 +81,8 @@ TOOLS_DICT = [
         "type": "function",
         "function": {
             "name": "markov_chain_regime",
-            "description": "Use a hidden markov model to identify distinct regimes in the asset.",
+            "description": "Use a hidden markov model to identify distinct regimes in the asset. It allows one to tell"
+                           " whether the market is bullish or bearish for an asset.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -127,7 +129,7 @@ TOOLS_DICT = [
             "returns": {
                 "type": "string",
                 "description": "A formatted table containing the future datetime, the forecasted median without drift, "
-                               "the forecasted median with drift (assuming the detected trends continues), the "
+                               "the forecasted median with drift (assuming the detected trends continue), the "
                                " 5% and 95% confidence interval, and the expected volatility."
             }
         }

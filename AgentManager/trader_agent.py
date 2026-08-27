@@ -86,6 +86,9 @@ class TraderAgent:
                 if response_message.content is not None and len(response_message.content) > 0:
                     self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
 
+                if response_message.refusal is not None and len(response_message.refusal) > 0:
+                    self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
+
 
                 if hasattr(response_message, 'reasoning_content') and len(response_message.reasoning_content) > 0:
                     self.log_callback(LogType.AGENT_REASONING, response_message.reasoning_content)

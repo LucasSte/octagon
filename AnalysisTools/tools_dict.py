@@ -172,7 +172,7 @@ TOOLS_DICT = [
                         "description": "The number of seconds to wait."
                     }
                 },
-                "required": ["symbol"]
+                "required": ["seconds"]
             },
             "returns": {
                 "type": "string",

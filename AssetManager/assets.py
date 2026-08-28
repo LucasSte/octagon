@@ -11,6 +11,7 @@ available_assets = {
     'NVDA': Asset('NVIDIA Corporation', 'NVDA'),
     'TSLA': Asset('Tesla, Inc.', 'TSLA'),
     'BA': Asset('The Boeing Company', 'BA'),
+    'MSFT': Asset('Microsoft Coporation', 'MSFT'),
 }
 
 def list_available_assets():

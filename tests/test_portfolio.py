@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from AssetManager.assets import Asset
-from AssetManager.portfolio import Portfolio, Possession, Purchase
+from octagon.tools.assets.available_assets import Asset
+from octagon.tools.assets.portfolio import Portfolio, Possession, Purchase
 
 
 class TestPortfolio(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestPortfolio(unittest.TestCase):
         expected = 'Your uninvested balance is $1000.00'
         self.assertEqual(result, expected)
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_buy_item_sufficient_balance(self, mock_price):
         """Test buying an item with sufficient balance."""
         mock_price.return_value = 50.0
@@ -41,7 +41,7 @@ class TestPortfolio(unittest.TestCase):
         expected_msg = 'Bought 2 units of AAPL at $100.00. Your new uninvested balance is $900.00.'
         self.assertEqual(result, expected_msg)
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_buy_item_insufficient_balance(self, mock_price):
         """Test buying an item with insufficient balance."""
         mock_price.return_value = 1500.0
@@ -54,7 +54,7 @@ class TestPortfolio(unittest.TestCase):
         # Check return message
         self.assertEqual(result, 'Insufficient Balance')
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_buy_item_existing_ticker(self, mock_price):
         """Test buying an item that already exists in portfolio."""
         mock_price.return_value = 50.0
@@ -72,13 +72,13 @@ class TestPortfolio(unittest.TestCase):
         expected_msg = 'Bought 1 units of AAPL at $60.00. Your new uninvested balance is $840.00.'
         self.assertEqual(result, expected_msg)
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_sell_item_not_in_portfolio(self, mock_price):
         """Test selling an item not in portfolio."""
         result = self.portfolio.sell_item('AAPL', 1)
         self.assertEqual(result, 'AAPL not in portfolio')
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_sell_item_insufficient_quantity(self, mock_price):
         """Test selling more than available quantity."""
         mock_price.return_value = 50.0
@@ -94,7 +94,7 @@ class TestPortfolio(unittest.TestCase):
                                  'the current holdings. Sold 2 units of AAPL at $120.00. You new uninvested balance '
                                  'is $1020.00.')
     
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_sell_item_success(self, mock_price):
         """Test successful selling of an item."""
         mock_price.return_value = 50.0
@@ -115,11 +115,11 @@ class TestPortfolio(unittest.TestCase):
         expected_msg = 'Sold 1 units of AAPL at $60.00. You new uninvested balance is $960.00.'
         self.assertEqual(result, expected_msg)
 
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_get_formatted_portfolio(self, mock_price):
         """Test get_formatted_portfolio method."""
         # Mock the assets dictionary to provide asset names
-        with patch('AssetManager.portfolio.available_assets') as mock_assets:
+        with patch('octagon.tools.assets.portfolio.available_assets') as mock_assets:
             mock_assets_dict = {
                 'AAPL': Asset(name='Apple Inc.', ticker='AAPL'),
                 'MSFT': Asset(name='Microsoft Corporation', ticker='MSFT')
@@ -130,8 +130,8 @@ class TestPortfolio(unittest.TestCase):
             
             # Add some items to the portfolio
             self.portfolio.portfolio_map = {
-                'AAPL': Possession(quantity=100.0, purchase_value=520),
-                'MSFT': Possession(quantity=50.0, purchase_value=48)
+                'AAPL': Possession(quantity=100.0, purchase_value=520, purchase_history=[]),
+                'MSFT': Possession(quantity=50.0, purchase_value=48, purchase_history=[])
             }
             
             result = self.portfolio.get_formatted_portfolio()
@@ -169,7 +169,7 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(self.portfolio.balance, 20.50)
         self.assertEqual(self.portfolio.portfolio_map, my_map)
 
-    @patch('AssetManager.portfolio.yahoo.real_time_price')
+    @patch('octagon.tools.assets.portfolio.yahoo.real_time_price')
     def test_purchase_value(self, mock_price):
         mock_price.return_value = 50.0
         self.portfolio.buy_item('AAPL', 1)

@@ -6,11 +6,11 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Input, Static, RichLog
 from textual.worker import get_current_worker
 
-from AgentManager.trader_agent import TraderAgent
-from Dashboard.log_type import LogType
+from octagon.agent.trader_agent import TraderAgent
+from octagon.dashboard.log_type import LogType
 
 
-class OctagonDashboard(App):
+class Dashboard(App):
     def __init__(
         self,
         agent: TraderAgent,
@@ -187,7 +187,7 @@ class OctagonDashboard(App):
             # This is not stopping the agent
             self.active_worker.cancel()
             self.active_worker = None
-            self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be anymore.')
+            self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be traded anymore.')
 
     @work(thread=True, exclusive=True, exit_on_error=True)
     def run_agent(self):

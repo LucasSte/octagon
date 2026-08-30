@@ -2,12 +2,12 @@
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents to provide financial analysis.
 """
-from AnalysisTools.fama_french_factor import fama_french_factor
-from AnalysisTools.kalman_fair_value import kalman_fair_value
-from AnalysisTools.markov_chain_regime import markov_chain_regime
-from AnalysisTools.particle_filter import particle_filter_forecast
-from AnalysisTools.stocktwits import stocktwits_sentiments
-from AnalysisTools.utils import wait
+from octagon.tools.analysis.fama_french_factor import fama_french_factor
+from octagon.tools.analysis.kalman_fair_value import kalman_fair_value
+from octagon.tools.analysis.markov_chain_regime import markov_chain_regime
+from octagon.tools.analysis.particle_filter import particle_filter_forecast
+from octagon.tools.analysis.stocktwits import stocktwits_sentiments
+from octagon.tools.analysis.utils import wait
 
 TOOLS_DICT = [
     {

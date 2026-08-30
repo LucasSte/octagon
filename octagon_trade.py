@@ -1,6 +1,6 @@
-from AgentManager.trader_agent import TraderAgent
-from Dashboard.dashboard import OctagonDashboard
-from MarketData.yahoo import today_date_time
+from octagon.agent.trader_agent import TraderAgent
+from octagon.dashboard.dashboard import Dashboard
+from octagon.tools.market_data.yahoo import today_date_time
 
 if __name__ == "__main__":
     initial_prompt = f"""
@@ -17,6 +17,6 @@ if __name__ == "__main__":
     rounds = 30
 
     trader_agent = TraderAgent(rounds, initial_prompt)
-    dashboard = OctagonDashboard(trader_agent)
+    dashboard = Dashboard(trader_agent)
 
     dashboard.run()

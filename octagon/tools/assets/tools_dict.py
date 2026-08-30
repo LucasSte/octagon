@@ -2,7 +2,7 @@
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents for portfolio management.
 """
-from AssetManager.assets import list_available_assets
+from octagon.tools.assets.available_assets import list_available_assets
 
 TOOLS_DICT = [
     {

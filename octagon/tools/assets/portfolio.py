@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from MarketData import yahoo
-from AssetManager.assets import available_assets
+from octagon.tools.market_data import yahoo
+from octagon.tools.assets.available_assets import available_assets
 from typing import Callable
 import json
 
@@ -65,28 +65,27 @@ class Portfolio:
 
         if self.portfolio_map[ticker].quantity <= 0:
             del self.portfolio_map[ticker]
+        else:
+            working_amount = amount
+            ticker_history = self.portfolio_map[ticker].purchase_history
+            ticker_purchase_value = self.portfolio_map[ticker].purchase_value
+
+            while working_amount > 0.0:
+                if ticker_history[0].amount <= working_amount:
+                    working_amount -= ticker_history[0].amount
+                    ticker_purchase_value -= ticker_history[0].amount * ticker_history[0].price
+                    ticker_history.pop(0)
+                else:
+                    ticker_purchase_value -= working_amount * ticker_history[0].price
+                    ticker_history[0].amount -= working_amount
+                    working_amount = 0.0
+
+            self.portfolio_map[ticker].purchase_value = ticker_purchase_value
+            self.portfolio_map[ticker].purchase_history = ticker_history
 
         price = yahoo.real_time_price(ticker)
         total = amount*price
         self.balance += total
-
-        working_amount = amount
-        ticker_history = self.portfolio_map[ticker].purchase_history
-        ticker_purchase_value = self.portfolio_map[ticker].purchase_value
-
-        while working_amount > 0.0:
-            if ticker_history[0].amount <= working_amount:
-                working_amount -= ticker_history[0].amount
-                ticker_purchase_value -= ticker_history[0].amount * ticker_history[0].price
-                ticker_history.pop(0)
-            else:
-                ticker_purchase_value -= working_amount * ticker_history[0].price
-                ticker_history[0].amount -= working_amount
-                working_amount = 0.0
-
-
-        self.portfolio_map[ticker].purchase_value = ticker_purchase_value
-        self.portfolio_map[ticker].purchase_history = ticker_history
 
         self.update_interface()
         message += f'Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}.'

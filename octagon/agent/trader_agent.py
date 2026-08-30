@@ -1,12 +1,13 @@
 from openai import OpenAI
 
-from AgentManager.tool_dispatch import ToolDispatch
-from AssetManager.portfolio import Portfolio
-import MarketData.tools_dict
-import AssetManager.tools_dict
-import AnalysisTools.tools_dict
+from octagon.agent.tool_dispatch import ToolDispatch
+from octagon.tools.assets.portfolio import Portfolio
+import octagon.tools.market_data.tools_dict
+import octagon.tools.assets.tools_dict
+import octagon.tools.analysis.tools_dict
+from octagon.dashboard.log_type import LogType
+
 from typing import Callable
-from Dashboard.log_type import LogType
 
 
 class TraderAgent:
@@ -16,8 +17,8 @@ class TraderAgent:
         self.client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
         self.portfolio = Portfolio(10000, dict())
 
-        self.available_tools = (MarketData.tools_dict.TOOLS_DICT +
-                                AssetManager.tools_dict.TOOLS_DICT + AnalysisTools.tools_dict.TOOLS_DICT)
+        self.available_tools = (octagon.tools.market_data.tools_dict.TOOLS_DICT +
+                                octagon.tools.analysis.tools_dict.TOOLS_DICT + octagon.tools.assets.tools_dict.TOOLS_DICT)
         self.dispatcher = ToolDispatch(self.portfolio)
 
         self.log_callback: Callable | None = None

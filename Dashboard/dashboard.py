@@ -179,6 +179,7 @@ class OctagonDashboard(App):
                 self.main_log_update(LogType.ERROR, 'Cannot load portfolio while agent is running')
             else:
                 self.agent.portfolio.load()
+                self.agent.portfolio.update_interface()
                 self.main_log_update(LogType.INFO, 'Successfully loaded portfolio.json')
 
     def stop_work(self):
@@ -186,10 +187,10 @@ class OctagonDashboard(App):
             # This is not stopping the agent
             self.active_worker.cancel()
             self.active_worker = None
-            self.main_log_update(LogType.INFO, 'Agent stopped')
+            self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be anymore.')
 
     @work(thread=True, exclusive=True, exit_on_error=True)
     def run_agent(self):
         worker = get_current_worker()
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
-        self.main_log_update(LogType.INFO, 'Agent loop finished')
+        self.main_log_update(LogType.INFO, 'Agent stopped')

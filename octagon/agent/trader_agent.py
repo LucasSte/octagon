@@ -1,13 +1,12 @@
 from openai import OpenAI
+from typing import Callable
+
 
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.tools.assets.portfolio import Portfolio
-import octagon.tools.market_data.tools_dict
-import octagon.tools.assets.tools_dict
-import octagon.tools.analysis.tools_dict
+from octagon.tools.registration import create_tools_list
 from octagon.dashboard.log_type import LogType
 
-from typing import Callable
 
 
 class TraderAgent:
@@ -17,8 +16,7 @@ class TraderAgent:
         self.client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
         self.portfolio = Portfolio(10000, dict())
 
-        self.available_tools = (octagon.tools.market_data.tools_dict.TOOLS_DICT +
-                                octagon.tools.analysis.tools_dict.TOOLS_DICT + octagon.tools.assets.tools_dict.TOOLS_DICT)
+        self.available_tools = create_tools_list()
         self.dispatcher = ToolDispatch(self.portfolio)
 
         self.log_callback: Callable | None = None
@@ -64,19 +62,23 @@ class TraderAgent:
             if should_stop():
                 break
 
-            chat_response = self.client.chat.completions.create(
-                model="Ternary-Bonsai-27B-Q2_0.gguf",
-                # model="qwen3.8-27b",
-                messages=messages,
-                tools=self.available_tools,
-                max_tokens=8196,
-                temperature=0.7,
-                top_p=0.95,
-                extra_body={
-                    "top_k": 20,
-                    # "enable_thinking": False,
-                },
-            )
+            try:
+                chat_response = self.client.chat.completions.create(
+                    model="Ternary-Bonsai-27B-Q2_0.gguf",
+                    # model="qwen3.8-27b",
+                    messages=messages,
+                    tools=self.available_tools,
+                    max_tokens=8196,
+                    temperature=0.7,
+                    top_p=0.95,
+                    extra_body={
+                        "top_k": 20,
+                    },
+                )
+            except Exception as e:
+                if self.log_callback is not None:
+                    self.log_callback(LogType.ERROR, str(e))
+                break
             response_message = chat_response.choices[0].message
 
             if should_stop():

@@ -4,7 +4,7 @@ These functions are designed to be used as tools by agents for portfolio managem
 """
 from octagon.tools.assets.available_assets import list_available_assets
 
-TOOLS_DICT = [
+DESCRIPTION_LIST = [
     {
         "type": "function",
         "function": {

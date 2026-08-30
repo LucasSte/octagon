@@ -9,7 +9,7 @@ from octagon.tools.analysis.particle_filter import particle_filter_forecast
 from octagon.tools.analysis.stocktwits import stocktwits_sentiments
 from octagon.tools.analysis.utils import wait
 
-TOOLS_DICT = [
+DESCRIPTION_LIST = [
     {
         "type": "function",
         "function": {

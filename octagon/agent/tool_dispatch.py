@@ -3,18 +3,13 @@ import json
 from typing import Callable
 
 from octagon.tools.assets.portfolio import Portfolio
-import octagon.tools.market_data.tools_dict
-import octagon.tools.assets.tools_dict
-import octagon.tools.analysis.tools_dict
+from octagon.tools.registration import create_dispatch_dictionary
 from octagon.tools.assets.available_assets import available_assets
 from octagon.dashboard.log_type import LogType
 
 class ToolDispatch:
     def __init__(self, portfolio: Portfolio):
-        self.dispatch_dictionary = (Portfolio.build_dispatch_dict(portfolio) |
-                                    octagon.tools.market_data.tools_dict.DISPATCH_DICT |
-                                    octagon.tools.assets.tools_dict.DISPATCH_DICT |
-                                    octagon.tools.analysis.tools_dict.DISPATCH_DICT)
+        self.dispatch_dictionary = create_dispatch_dictionary(portfolio)
 
         self.log_callback: Callable | None = None
         self.tool_status_callback: Callable | None = None

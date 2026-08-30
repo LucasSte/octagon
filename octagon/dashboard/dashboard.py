@@ -184,7 +184,6 @@ class Dashboard(App):
 
     def stop_work(self):
         if self.active_worker is not None:
-            # This is not stopping the agent
             self.active_worker.cancel()
             self.active_worker = None
             self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be traded anymore.')

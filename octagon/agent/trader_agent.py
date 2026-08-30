@@ -1,6 +1,6 @@
 from openai import OpenAI
 from typing import Callable
-
+import os
 
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.tools.assets.portfolio import Portfolio
@@ -10,10 +10,13 @@ from octagon.dashboard.log_type import LogType
 
 
 class TraderAgent:
-    def __init__(self, rounds: int, initial_prompt: str):
+    def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str):
         self.rounds = rounds
         self.initial_prompt = initial_prompt
-        self.client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
+        api_key = os.environ.get('OPENAI_API_KEY') or 'not-needed'
+        self.client = OpenAI(base_url=llm_url, api_key=api_key)
+        self.model_name = model_name
+
         self.portfolio = Portfolio(10000, dict())
 
         self.available_tools = create_tools_list()
@@ -64,8 +67,7 @@ class TraderAgent:
 
             try:
                 chat_response = self.client.chat.completions.create(
-                    model="Ternary-Bonsai-27B-Q2_0.gguf",
-                    # model="qwen3.8-27b",
+                    model=self.model_name,
                     messages=messages,
                     tools=self.available_tools,
                     max_tokens=8196,

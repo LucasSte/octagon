@@ -2,6 +2,9 @@ from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.tools.market_data.yahoo import today_date_time
 
+MODEL = "Ternary-Bonsai-27B-Q2_0.gguf"
+URL = "http://localhost:1234/v1"
+
 if __name__ == "__main__":
     initial_prompt = f"""
     You are a quantitative trader allowed to perform day trades, and your goal is to increase the available balance 
@@ -16,7 +19,7 @@ if __name__ == "__main__":
     """
     rounds = 30
 
-    trader_agent = TraderAgent(rounds, initial_prompt)
+    trader_agent = TraderAgent(rounds, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()

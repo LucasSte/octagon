@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from octagon.dashboard.log_type import LogType
 from octagon.tools.market_data import yahoo
 from octagon.tools.assets.available_assets import available_assets
 from typing import Callable
@@ -113,6 +114,10 @@ class Portfolio:
             final_string += 'No assets in portfolio'
 
         return final_string
+
+    def print_portfolio(self, callback: Callable[[LogType, str], None]):
+        formatted_portfolio = 'PORTFOLIO: \n' + self.get_formatted_portfolio() + '\n'
+        callback(LogType.INFO, formatted_portfolio)
 
     @staticmethod
     def build_dispatch_dict(instance: Portfolio):

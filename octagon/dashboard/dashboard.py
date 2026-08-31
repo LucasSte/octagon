@@ -154,33 +154,32 @@ class Dashboard(App):
         command = event.value.strip().lower()
         event.input.value = ""
 
-        if command == "quit":
-            self.stop_work()
-            self.exit()
-            return
-
-        if command == "start":
-            self.main_log_update(LogType.INFO, 'Starting agent')
-            self.agent.portfolio.update_interface()
-            self.active_worker = self.run_agent()
-
-        if command == "stop":
-            self.stop_work()
-
-        if command == "save":
-            if self.active_worker is not None:
-                self.main_log_update(LogType.ERROR, 'Cannot save portfolio while agent is running')
-            else:
-                self.agent.portfolio.save()
-                self.main_log_update(LogType.INFO, 'Successfully saved portfolio in portfolio.json')
-
-        if command == "load":
-            if self.active_worker is not None:
-                self.main_log_update(LogType.ERROR, 'Cannot load portfolio while agent is running')
-            else:
-                self.agent.portfolio.load()
+        match command:
+            case "quit":
+                self.stop_work()
+                self.exit()
+            case "start":
+                self.main_log_update(LogType.INFO, 'Starting agent')
                 self.agent.portfolio.update_interface()
-                self.main_log_update(LogType.INFO, 'Successfully loaded portfolio.json')
+                self.active_worker = self.run_agent()
+            case "stop":
+                self.stop_work()
+            case "save":
+                if self.active_worker is not None:
+                    self.main_log_update(LogType.ERROR, 'Cannot save portfolio while agent is running')
+                else:
+                    self.agent.portfolio.save()
+                    self.main_log_update(LogType.INFO, 'Successfully saved portfolio in portfolio.json')
+            case "load":
+                if self.active_worker is not None:
+                    self.main_log_update(LogType.ERROR, 'Cannot load portfolio while agent is running')
+                else:
+                    self.agent.portfolio.load()
+                    self.agent.portfolio.update_interface()
+                    self.main_log_update(LogType.INFO, 'Successfully loaded portfolio.json')
+            case "portfolio":
+                self.main_log_update(LogType.INFO, 'Calculating portoflio value ...')
+                self.print_portfolio()
 
     def stop_work(self):
         if self.active_worker is not None:
@@ -188,8 +187,12 @@ class Dashboard(App):
             self.active_worker = None
             self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be traded anymore.')
 
-    @work(thread=True, exclusive=True, exit_on_error=True)
+    @work(thread=True, exclusive=False, exit_on_error=True)
     def run_agent(self):
         worker = get_current_worker()
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
         self.main_log_update(LogType.INFO, 'Agent stopped')
+
+    @work(thread=True, exclusive=False)
+    def print_portfolio(self):
+        self.agent.portfolio.print_portfolio(self.main_log_update)

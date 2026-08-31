@@ -1,0 +1,24 @@
+[project]
+name = "octagon"
+version = "0.1.0"
+description = "LLM-driven quantitative trading agent"
+requires-python = ">=3.14"
+dependencies = [
+    "hmmlearn==0.3.3",
+    "mplfinance==0.12.10b0",
+    "numpy==2.5.0",
+    "openai==2.48.0",
+    "pandas==3.0.3",
+    "pandas-datareader==0.11.1",
+    "pykalman==0.11.2",
+    "pytz==2026.2",
+    "rich==15.0.0",
+    "scipy==1.18.0",
+    "statsmodels==0.14.6",
+    "textual==8.2.8",
+    "yfinance==1.4.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

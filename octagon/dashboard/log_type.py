@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class LogType(Enum):
     INFO = 1
     WARN = 2

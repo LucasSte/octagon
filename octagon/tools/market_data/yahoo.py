@@ -1,7 +1,7 @@
 import mplfinance as mpf
 import pytz
-from octagon.tools.market_data.yahoo_utils import *
 
+from octagon.tools.market_data.yahoo_utils import *
 
 '''
 FUNCTIONS TO BE USED AS TOOLS FOR AGENTS.

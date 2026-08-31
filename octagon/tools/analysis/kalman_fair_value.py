@@ -1,7 +1,8 @@
+import numpy as np
 import pandas as pd
 import yfinance as yf
 from pykalman import KalmanFilter
-import numpy as np
+
 
 def fit_local_level_em(price, n_iter: int = 20, em_vars=None):
     """

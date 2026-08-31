@@ -1,11 +1,12 @@
 import inspect
 import json
-from typing import Callable
+from collections.abc import Callable
 
+from octagon.dashboard.log_type import LogType
+from octagon.tools.assets.available_assets import available_assets
 from octagon.tools.assets.portfolio import Portfolio
 from octagon.tools.registration import create_dispatch_dictionary
-from octagon.tools.assets.available_assets import available_assets
-from octagon.dashboard.log_type import LogType
+
 
 class ToolDispatch:
     def __init__(self, portfolio: Portfolio):

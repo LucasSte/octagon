@@ -1,6 +1,7 @@
 import json
 from urllib.request import Request, urlopen
 
+
 def stocktwits_sentiments(ticker):
     url = f'https://api.stocktwits.com/api/2/streams/symbol/{ticker}.json'
     req = Request(url, headers={"User-Agent": "octagon/0.1", "Accept": "application/json"})

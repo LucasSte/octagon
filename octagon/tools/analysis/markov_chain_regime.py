@@ -1,7 +1,8 @@
+import numpy as np
 import pandas as pd
 import yfinance as yf
-import numpy as np
 from hmmlearn.hmm import GaussianHMM
+
 
 def fit_hmm(df: pd.DataFrame, n_states: int = 2, features=("log_return", "volatility"),
             n_iter: int = 1000, random_state: int = 42):

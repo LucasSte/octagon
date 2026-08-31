@@ -1,8 +1,10 @@
-import yfinance as yf
 import time
-from functools import wraps
 from datetime import datetime
+from functools import wraps
+from zoneinfo import ZoneInfo
+
 import pandas as pd
+import yfinance as yf
 
 '''
 UTILITY FUNCTIONS.
@@ -67,7 +69,7 @@ def validate_date(date_string):
         date_obj = datetime.strptime(date_string, '%Y-%m-%d')
 
         # Check if date is not in the future
-        today = datetime.now()
+        today = datetime.now(ZoneInfo("America/New_York"))
         if date_obj >= today:
             return 'Date in the future'
 
@@ -137,7 +139,7 @@ def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
     total_assets = balance.loc['Total Assets']
     free_cash_flow = cash_flow.loc['Free Cash Flow']
 
-    for i in range(0, 3):
+    for i in range(3):
         header += f' {income.keys()[i].strftime('%Y-%m-%d')}   |'
         revenue_row += f' {total_revenue.iloc[i]:e} |'
         profit_row += f' {gross_profit.iloc[i]:e} |'
@@ -232,7 +234,7 @@ def format_historical_data_pandas(historical_data):
         'High': df_reset['High'].round(2),
         'Low': df_reset['Low'].round(2),
         'Close': df_reset['Close'].round(2),
-        'Volume': df_reset['Volume'].apply(lambda x: '{:e}'.format(x))
+        'Volume': df_reset['Volume'].apply(lambda x: f'{x:e}')
     })
 
     formatted = result.to_string()

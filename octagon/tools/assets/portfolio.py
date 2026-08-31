@@ -1,10 +1,10 @@
+import json
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from octagon.dashboard.log_type import LogType
-from octagon.tools.market_data import yahoo
 from octagon.tools.assets.available_assets import available_assets
-from typing import Callable
-import json
+from octagon.tools.market_data import yahoo
 
 
 @dataclass

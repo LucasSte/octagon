@@ -1,12 +1,12 @@
-from openai import OpenAI
-from typing import Callable
 import os
+from collections.abc import Callable
+
+from openai import OpenAI
 
 from octagon.agent.tool_dispatch import ToolDispatch
+from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.portfolio import Portfolio
 from octagon.tools.registration import create_tools_list
-from octagon.dashboard.log_type import LogType
-
 
 
 class TraderAgent:

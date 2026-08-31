@@ -3,7 +3,7 @@ from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Input, Static, RichLog
+from textual.widgets import Input, RichLog, Static
 from textual.worker import get_current_worker
 
 from octagon.agent.trader_agent import TraderAgent

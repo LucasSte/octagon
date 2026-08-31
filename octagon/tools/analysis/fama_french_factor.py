@@ -1,7 +1,8 @@
 import pandas as pd
-import yfinance as yf
 import statsmodels.api as sm
+import yfinance as yf
 from pandas_datareader import data as pdr
+
 
 def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
                       start: str = "2015-01-01", end: str = None) -> pd.DataFrame:

@@ -3,11 +3,12 @@ Particle Filter for Stochastic Volatility (SV) + Forecasting
 ------------------------------------------------------------------
 """
 
+from datetime import time as dtime
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
 from scipy.stats import t as student_t
-from datetime import time as dtime
 
 MARKET_OPEN = dtime(9, 30)
 MARKET_CLOSE = dtime(16, 0)

@@ -1,4 +1,5 @@
 from octagon.tools.market_data.yahoo import *
+
 """
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents to provide financial data.

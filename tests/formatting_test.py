@@ -1,11 +1,11 @@
 import unittest
 
-from octagon.tools.market_data.yahoo import *
 from octagon.tools.analysis.fama_french_factor import fama_french_factor
 from octagon.tools.analysis.kalman_fair_value import kalman_fair_value
-from octagon.tools.analysis.particle_filter import particle_filter_forecast
 from octagon.tools.analysis.markov_chain_regime import markov_chain_regime
+from octagon.tools.analysis.particle_filter import particle_filter_forecast
 from octagon.tools.analysis.stocktwits import stocktwits_sentiments
+from octagon.tools.market_data.yahoo import *
 
 
 class TestPortfolio(unittest.TestCase):

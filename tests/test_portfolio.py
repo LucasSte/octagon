@@ -161,7 +161,7 @@ class TestPortfolio(unittest.TestCase):
 
         self.portfolio.save()
 
-        self.portfolio.portfolio_map = dict()
+        self.portfolio.portfolio_map = {}
         self.portfolio.balance = 0.0
 
         self.portfolio.load()

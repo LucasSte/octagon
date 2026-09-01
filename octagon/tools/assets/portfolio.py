@@ -39,6 +39,7 @@ class Portfolio:
         if ticker in self.portfolio_map:
             self.portfolio_map[ticker].quantity += amount
             self.portfolio_map[ticker].purchase_value += total
+            self.portfolio_map[ticker].purchase_history.append(Purchase(price=price, amount=amount))
         else:
             self.portfolio_map[ticker] = Possession(
                 quantity=amount,

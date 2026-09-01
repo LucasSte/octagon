@@ -13,7 +13,9 @@ if __name__ == "__main__":
     You'll have multiple opportunities to buy and sell assets. Do not ask any questions. Use the 
     available tools to enhance your trading decisions.
     
-    Do not put more than 75% of your money in a single asset.
+    Do not put more than 70% of your money in a single asset.
+    
+    For day trading, gains of $10.00 or more are significant to lock profits.
     
     Today's date is {today_date_time()}
     """

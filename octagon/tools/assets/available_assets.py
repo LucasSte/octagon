@@ -12,6 +12,14 @@ available_assets = {
     'TSLA': Asset('Tesla, Inc.', 'TSLA'),
     'BA': Asset('The Boeing Company', 'BA'),
     'MSFT': Asset('Microsoft Coporation', 'MSFT'),
+    'AMD': Asset('Advanced Micro Devices, Inc.', 'AMD'),
+    'HSBC': Asset('HSBC Holdings plc', 'HSBC'),
+    'ASML': Asset('ASML Holding N.V.', 'ASML'),
+    'EMBJ': Asset('Embraer S.A.', 'EMBJ'),
+    'QCOM': Asset('QUALCOMM Incorporated', 'QCOM'),
+    'UNH': Asset('UnitedHealth Group Incorporated', 'UNH'),
+    'AMZN': Asset('Amazon.com, Inc.', 'AMZN'),
+    'AVGO': Asset('Broadcom Inc.', 'AVGO'),
 }
 
 def list_available_assets():

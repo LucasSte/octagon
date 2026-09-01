@@ -192,6 +192,8 @@ class Dashboard(App):
         worker = get_current_worker()
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
         self.main_log_update(LogType.INFO, 'Agent stopped')
+        self.active_worker.cancel()
+        self.active_worker = None
 
     @work(thread=True, exclusive=False)
     def print_portfolio(self):

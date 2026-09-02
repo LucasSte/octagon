@@ -20,6 +20,8 @@ available_assets = {
     'UNH': Asset('UnitedHealth Group Incorporated', 'UNH'),
     'AMZN': Asset('Amazon.com, Inc.', 'AMZN'),
     'AVGO': Asset('Broadcom Inc.', 'AVGO'),
+    'MRNA': Asset('Moderna, Inc.', 'MRNA'),
+    'GS': Asset('The Goldman Sachs Group, Inc.', 'GS'),
 }
 
 def list_available_assets():

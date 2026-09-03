@@ -5,12 +5,17 @@ from octagon.tools.assets.portfolio import Portfolio
 
 
 def create_tools_list() -> list:
-    return (octagon.tools.analysis.metadata.DESCRIPTION_LIST
-            + octagon.tools.assets.metadata.DESCRIPTION_LIST
-            + octagon.tools.market_data.metadata.DESCRIPTION_LIST)
+    return (
+        octagon.tools.analysis.metadata.DESCRIPTION_LIST
+        + octagon.tools.assets.metadata.DESCRIPTION_LIST
+        + octagon.tools.market_data.metadata.DESCRIPTION_LIST
+    )
+
 
 def create_dispatch_dictionary(portfolio: Portfolio):
-    return (Portfolio.build_dispatch_dict(portfolio) |
-            octagon.tools.analysis.metadata.DISPATCH_DICT |
-            octagon.tools.assets.metadata.DISPATCH_DICT |
-            octagon.tools.market_data.metadata.DISPATCH_DICT)
+    return (
+        Portfolio.build_dispatch_dict(portfolio)
+        | octagon.tools.analysis.metadata.DISPATCH_DICT
+        | octagon.tools.assets.metadata.DISPATCH_DICT
+        | octagon.tools.market_data.metadata.DISPATCH_DICT
+    )

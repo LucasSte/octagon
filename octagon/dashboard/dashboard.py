@@ -14,10 +14,10 @@ class Dashboard(App):
     def __init__(
         self,
         agent: TraderAgent,
-        driver_class = None,
-        css_path = None,
-        watch_css = False,
-        ansi_color = None,
+        driver_class=None,
+        css_path=None,
+        watch_css=False,
+        ansi_color=None,
     ):
         super().__init__(driver_class, css_path, watch_css, ansi_color)
         self.active_worker = None
@@ -40,8 +40,12 @@ class Dashboard(App):
                             id="top_row_left",
                         )
                         yield Static(
-                            Panel("Iterations: 0/0", title="Agent",
-                                  border_style="green", expand=True),
+                            Panel(
+                                "Iterations: 0/0",
+                                title="Agent",
+                                border_style="green",
+                                expand=True,
+                            ),
                             id="top_row_right",
                         )
 
@@ -54,14 +58,17 @@ class Dashboard(App):
 
                 with Vertical(id="right"):
                     yield Static(
-                        Panel("$0", title="Uninvested balance",
-                              border_style="magenta", expand=True),
+                        Panel(
+                            "$0",
+                            title="Uninvested balance",
+                            border_style="magenta",
+                            expand=True,
+                        ),
                         id="top_right",
                     )
                     yield Static(
-                        Panel("None", title="Assets",
-                              border_style="red", expand=True),
-                        id="bottom_right"
+                        Panel("None", title="Assets", border_style="red", expand=True),
+                        id="bottom_right",
                     )
 
             yield Input(
@@ -119,35 +126,42 @@ class Dashboard(App):
         line = Text()
         match log_type:
             case LogType.INFO:
-                line.append('INFO: ', style='cyan')
+                line.append("INFO: ", style="cyan")
             case LogType.WARN:
-                line.append('WARN: ', style='amber')
+                line.append("WARN: ", style="amber")
             case LogType.ERROR:
-                line.append('ERROR: ', style='red')
+                line.append("ERROR: ", style="red")
             case LogType.AGENT_MESSAGE:
-                line.append('AGENT: ', style='yellow')
+                line.append("AGENT: ", style="yellow")
             case LogType.AGENT_REASONING:
-                line.append('REASONING: ', style='purple')
+                line.append("REASONING: ", style="purple")
         line.append(message)
 
-        log = self.query_one('#bottom_left', RichLog)
+        log = self.query_one("#bottom_left", RichLog)
         log.write(line)
 
     def update_assets(self, assets: str, balance: float):
         self.query_one("#top_right", Static).update(
-            Panel(f'${balance:.2f}', title="Uninvested balance",
-                              border_style="magenta", expand=True)
+            Panel(
+                f"${balance:.2f}",
+                title="Uninvested balance",
+                border_style="magenta",
+                expand=True,
+            )
         )
 
         self.query_one("#bottom_right", Static).update(
-            Panel(assets, title="Assets",
-                              border_style="red", expand=True)
+            Panel(assets, title="Assets", border_style="red", expand=True)
         )
 
     def update_iterations(self, current: int, maximum: int):
         self.query_one("#top_row_right", Static).update(
-            Panel(f'Iterations: {current}/{maximum}', title="Agent",
-                  border_style="green", expand=True)
+            Panel(
+                f"Iterations: {current}/{maximum}",
+                title="Agent",
+                border_style="green",
+                expand=True,
+            )
         )
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
@@ -159,39 +173,50 @@ class Dashboard(App):
                 self.stop_work()
                 self.exit()
             case "start":
-                self.main_log_update(LogType.INFO, 'Starting agent')
+                self.main_log_update(LogType.INFO, "Starting agent")
                 self.agent.portfolio.update_interface()
                 self.active_worker = self.run_agent()
             case "stop":
                 self.stop_work()
             case "save":
                 if self.active_worker is not None:
-                    self.main_log_update(LogType.ERROR, 'Cannot save portfolio while agent is running')
+                    self.main_log_update(
+                        LogType.ERROR, "Cannot save portfolio while agent is running"
+                    )
                 else:
                     self.agent.portfolio.save()
-                    self.main_log_update(LogType.INFO, 'Successfully saved portfolio in portfolio.json')
+                    self.main_log_update(
+                        LogType.INFO, "Successfully saved portfolio in portfolio.json"
+                    )
             case "load":
                 if self.active_worker is not None:
-                    self.main_log_update(LogType.ERROR, 'Cannot load portfolio while agent is running')
+                    self.main_log_update(
+                        LogType.ERROR, "Cannot load portfolio while agent is running"
+                    )
                 else:
                     self.agent.portfolio.load()
                     self.agent.portfolio.update_interface()
-                    self.main_log_update(LogType.INFO, 'Successfully loaded portfolio.json')
+                    self.main_log_update(
+                        LogType.INFO, "Successfully loaded portfolio.json"
+                    )
             case "portfolio":
-                self.main_log_update(LogType.INFO, 'Calculating portoflio value ...')
+                self.main_log_update(LogType.INFO, "Calculating portoflio value ...")
                 self.print_portfolio()
 
     def stop_work(self):
         if self.active_worker is not None:
             self.active_worker.cancel()
             self.active_worker = None
-            self.main_log_update(LogType.INFO, 'Waiting for agent to disconnect. No assets can be traded anymore.')
+            self.main_log_update(
+                LogType.INFO,
+                "Waiting for agent to disconnect. No assets can be traded anymore.",
+            )
 
     @work(thread=True, exclusive=False, exit_on_error=True)
     def run_agent(self):
         worker = get_current_worker()
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
-        self.main_log_update(LogType.INFO, 'Agent stopped')
+        self.main_log_update(LogType.INFO, "Agent stopped")
         self.active_worker.cancel()
         self.active_worker = None
 

@@ -19,10 +19,26 @@ GRANULARITY_CONFIG = {
     # max_gap: largest allowed time gap between consecutive bars before a
     #   return is treated as a session-crossing gap (overnight/weekend)
     #   and excluded, rather than a real single-step move
-    "1d": {"interval": "1d", "periods_per_year": 252, "max_gap": pd.Timedelta(days=4), "unit": "day"},
-    "1h": {"interval": "1h", "periods_per_year": 252 * 24, "max_gap": pd.Timedelta(hours=2), "unit": "hour"},
-    "1m": {"interval": "1m", "periods_per_year": 252 * 390, "max_gap": pd.Timedelta(minutes=5), "unit": "minute"},
+    "1d": {
+        "interval": "1d",
+        "periods_per_year": 252,
+        "max_gap": pd.Timedelta(days=4),
+        "unit": "day",
+    },
+    "1h": {
+        "interval": "1h",
+        "periods_per_year": 252 * 24,
+        "max_gap": pd.Timedelta(hours=2),
+        "unit": "hour",
+    },
+    "1m": {
+        "interval": "1m",
+        "periods_per_year": 252 * 390,
+        "max_gap": pd.Timedelta(minutes=5),
+        "unit": "minute",
+    },
 }
+
 
 def fetch_returns(ticker: str, granularity: str) -> tuple:
     """
@@ -37,14 +53,17 @@ def fetch_returns(ticker: str, granularity: str) -> tuple:
     cfg = GRANULARITY_CONFIG[granularity]
 
     if granularity == "1d":
-        price = yf.download(ticker, start='', interval="1d",
-                             auto_adjust=True, progress=False)["Close"]
+        price = yf.download(
+            ticker, start="", interval="1d", auto_adjust=True, progress=False
+        )["Close"]
     elif granularity == "1h":
-        price = yf.download(ticker, period='1y', interval="1h",
-                            auto_adjust=True, progress=False)["Close"]
+        price = yf.download(
+            ticker, period="1y", interval="1h", auto_adjust=True, progress=False
+        )["Close"]
     else:
-        price = yf.download(ticker, period='7d', interval="1m",
-                             auto_adjust=True, progress=False)["Close"]
+        price = yf.download(
+            ticker, period="7d", interval="1m", auto_adjust=True, progress=False
+        )["Close"]
 
     price = price.dropna().squeeze()
 
@@ -59,15 +78,16 @@ def fetch_returns(ticker: str, granularity: str) -> tuple:
     returns.name = "log_return"
 
     # keep price aligned to the same index as the cleaned returns
-    price = price.loc[returns.index[0]:]
+    price = price.loc[returns.index[0] :]
 
     return returns, price
+
 
 def future_timestamps(last_ts: pd.Timestamp, n: int, granularity: str) -> list:
     if granularity == "1d":
         return list(pd.bdate_range(start=last_ts, periods=n + 1, freq="B")[1:])
 
-    if granularity == '1h':
+    if granularity == "1h":
         time_delta = pd.Timedelta(hours=1)
     else:
         time_delta = pd.Timedelta(minutes=1)
@@ -81,6 +101,7 @@ def future_timestamps(last_ts: pd.Timestamp, n: int, granularity: str) -> list:
             t = next_day + pd.Timedelta(hours=9, minutes=30)
         times.append(t)
     return times
+
 
 def calibrate_sv_params(returns: np.ndarray, phi: float = 0.95) -> dict:
     """
@@ -109,18 +130,26 @@ def calibrate_sv_params(returns: np.ndarray, phi: float = 0.95) -> dict:
     r = returns[~np.isnan(returns)]
     X = np.log(r**2 + 1e-12)
 
-    E_LOG_EPS2 = -1.2704   # E[log(chi-squared_1)] for a standard normal shock
-    VAR_LOG_EPS2 = (np.pi ** 2) / 2  # ~4.9348
+    E_LOG_EPS2 = -1.2704  # E[log(chi-squared_1)] for a standard normal shock
+    VAR_LOG_EPS2 = (np.pi**2) / 2  # ~4.9348
 
     mu = X.mean() - E_LOG_EPS2
     var_h = max(X.var() - VAR_LOG_EPS2, 1e-4)
-    sigma_eta = np.sqrt(var_h * (1 - phi ** 2))
+    sigma_eta = np.sqrt(var_h * (1 - phi**2))
 
     return {"mu": mu, "phi": phi, "sigma_eta": max(sigma_eta, 0.05)}
 
-def sv_particle_filter(returns: np.ndarray, mu: float, phi: float, sigma_eta: float,
-                        n_particles: int = 5000, dof: float = 6.0,
-                        resample_threshold: float = 0.5, random_state: int = 42):
+
+def sv_particle_filter(
+    returns: np.ndarray,
+    mu: float,
+    phi: float,
+    sigma_eta: float,
+    n_particles: int = 5000,
+    dof: float = 6.0,
+    resample_threshold: float = 0.5,
+    random_state: int = 42,
+):
     """
     Filters the hidden log-volatility state h_t given observed returns.
 
@@ -144,7 +173,9 @@ def sv_particle_filter(returns: np.ndarray, mu: float, phi: float, sigma_eta: fl
     ess_history = np.zeros(n)
 
     for t in range(n):
-        h_particles = mu + phi * (h_particles - mu) + sigma_eta * rng.standard_normal(n_particles)
+        h_particles = (
+            mu + phi * (h_particles - mu) + sigma_eta * rng.standard_normal(n_particles)
+        )
 
         vol = np.exp(h_particles / 2)
         likelihood = student_t.pdf(returns[t], df=dof, loc=0, scale=vol)
@@ -154,7 +185,7 @@ def sv_particle_filter(returns: np.ndarray, mu: float, phi: float, sigma_eta: fl
 
         filtered_h[t] = np.sum(h_particles * weights)
 
-        ess = 1.0 / np.sum(weights ** 2)
+        ess = 1.0 / np.sum(weights**2)
         ess_history[t] = ess
         if ess < resample_threshold * n_particles:
             idx = rng.choice(n_particles, size=n_particles, p=weights)
@@ -163,6 +194,7 @@ def sv_particle_filter(returns: np.ndarray, mu: float, phi: float, sigma_eta: fl
 
     filtered_vol = np.exp(filtered_h / 2)
     return filtered_h, filtered_vol, ess_history, h_particles, weights
+
 
 def estimate_drift(returns: np.ndarray, lookback: int | None = None) -> float:
     """
@@ -177,9 +209,19 @@ def estimate_drift(returns: np.ndarray, lookback: int | None = None) -> float:
         r = r[-lookback:]
     return float(np.mean(r))
 
-def forecast_price_paths(last_price: float, last_h_particles: np.ndarray, last_weights: np.ndarray,
-                          h: int, mu: float, phi: float, sigma_eta: float, dof: float,
-                          drift: float = 0.0, random_state: int = 123):
+
+def forecast_price_paths(
+    last_price: float,
+    last_h_particles: np.ndarray,
+    last_weights: np.ndarray,
+    h: int,
+    mu: float,
+    phi: float,
+    sigma_eta: float,
+    dof: float,
+    drift: float = 0.0,
+    random_state: int = 123,
+):
     """
     drift: additive per-period log-return drift added to every simulated
            step (0.0 by default -- the model's native, no-drift behavior).
@@ -205,7 +247,9 @@ def forecast_price_paths(last_price: float, last_h_particles: np.ndarray, last_w
     forecast_vol = np.zeros(h)  # expected volatility path itself, useful on its own
 
     for i in range(h):
-        h_state = mu + phi * (h_state - mu) + sigma_eta * rng.standard_normal(n_particles)
+        h_state = (
+            mu + phi * (h_state - mu) + sigma_eta * rng.standard_normal(n_particles)
+        )
         vol = np.exp(h_state / 2)
         r = drift + vol * rng.standard_t(dof, n_particles)
         price_paths = price_paths * np.exp(r)
@@ -218,8 +262,12 @@ def forecast_price_paths(last_price: float, last_h_particles: np.ndarray, last_w
         forecast_vol[i] = vol.mean()
 
     return {
-        "median": forecast_median, "q05": forecast_q05, "q25": forecast_q25,
-        "q75": forecast_q75, "q95": forecast_q95, "vol": forecast_vol,
+        "median": forecast_median,
+        "q05": forecast_q05,
+        "q25": forecast_q25,
+        "q75": forecast_q75,
+        "q95": forecast_q95,
+        "vol": forecast_vol,
         "paths": price_paths,
     }
 
@@ -228,10 +276,10 @@ def particle_filter_forecast(ticker, granularity):
     horizon = 10
     n_particles = 5000
     dof = 6.0
-    phi = 0.95 # volatility persistence -- higher means regimes last longer
+    phi = 0.95  # volatility persistence -- higher means regimes last longer
 
     if granularity not in GRANULARITY_CONFIG:
-        return f'Invalid granularity: {granularity}'
+        return f"Invalid granularity: {granularity}"
 
     cfg = GRANULARITY_CONFIG[granularity]
     unit = cfg["unit"]
@@ -239,20 +287,31 @@ def particle_filter_forecast(ticker, granularity):
     returns, price = fetch_returns(ticker, granularity)
     params = calibrate_sv_params(returns.values, phi)
 
-    formatted_response = (f"Calibrated SV params: mu={params['mu']:.4f} (long-run per-{unit} vol "
-          f"~{np.exp(params['mu']/2)*100:.3f}%), phi={params['phi']:.2f}, "
-          f"sigma_eta={params['sigma_eta']:.3f}\n\n")
-
-    _filtered_h, filtered_vol, ess_history, h_particles, weights = sv_particle_filter(
-        returns.values, **params, n_particles=n_particles, dof=dof,
+    formatted_response = (
+        f"Calibrated SV params: mu={params['mu']:.4f} (long-run per-{unit} vol "
+        f"~{np.exp(params['mu'] / 2) * 100:.3f}%), phi={params['phi']:.2f}, "
+        f"sigma_eta={params['sigma_eta']:.3f}\n\n"
     )
 
-    formatted_response += (f"Mean ESS: {ess_history.mean():.0f} / {n_particles} "
-          f"({100 * ess_history.mean() / n_particles:.1f}%)\n")
-    formatted_response += f"Current filtered per-{unit} volatility: {filtered_vol[-1] * 100:.3f}%  \n\n"
+    _filtered_h, filtered_vol, ess_history, h_particles, weights = sv_particle_filter(
+        returns.values,
+        **params,
+        n_particles=n_particles,
+        dof=dof,
+    )
+
+    formatted_response += (
+        f"Mean ESS: {ess_history.mean():.0f} / {n_particles} "
+        f"({100 * ess_history.mean() / n_particles:.1f}%)\n"
+    )
+    formatted_response += (
+        f"Current filtered per-{unit} volatility: {filtered_vol[-1] * 100:.3f}%  \n\n"
+    )
 
     last_price = price.values[-1]
-    fc = forecast_price_paths(last_price, h_particles, weights, horizon, **params, dof=dof, drift=0.0)
+    fc = forecast_price_paths(
+        last_price, h_particles, weights, horizon, **params, dof=dof, drift=0.0
+    )
 
     if granularity == "1d":
         drift_lookback = 390
@@ -263,29 +322,38 @@ def particle_filter_forecast(ticker, granularity):
 
     drift_est = estimate_drift(returns.values, drift_lookback)
 
-    fc_drift = forecast_price_paths(last_price, h_particles, weights, horizon, **params, dof=dof,
-                                    drift=drift_est)
+    fc_drift = forecast_price_paths(
+        last_price, h_particles, weights, horizon, **params, dof=dof, drift=drift_est
+    )
 
-    formatted_response += ("NOTE: this is just the recent historical average return extrapolated forward -- "
-          "not a discovered edge. Treat the drift-adjusted median as a stated assumption, "
-          "not a stronger prediction than the driftless one.\n\n")
+    formatted_response += (
+        "NOTE: this is just the recent historical average return extrapolated forward -- "
+        "not a discovered edge. Treat the drift-adjusted median as a stated assumption, "
+        "not a stronger prediction than the driftless one.\n\n"
+    )
 
-    if granularity == '1d':
-        date_format = '%Y-%m-%d'
-        extra_space = ''
+    if granularity == "1d":
+        date_format = "%Y-%m-%d"
+        extra_space = ""
     else:
-        date_format = '%Y-%m-%d %H:%M'
-        extra_space = '      '
+        date_format = "%Y-%m-%d %H:%M"
+        extra_space = "      "
 
     last_ts = returns.index[-1]
     forecast_times = future_timestamps(last_ts, horizon, granularity)
 
-    formatted_response += f"Last price ({last_ts.strftime(date_format)}): {last_price:.2f}\n"
-    formatted_response += (f"Forecast  {extra_space} | median (no drift) | median (with drift) | [5th pct, 95th pct] "
-                           f"| Expected volatility\n")
+    formatted_response += (
+        f"Last price ({last_ts.strftime(date_format)}): {last_price:.2f}\n"
+    )
+    formatted_response += (
+        f"Forecast  {extra_space} | median (no drift) | median (with drift) | [5th pct, 95th pct] "
+        f"| Expected volatility\n"
+    )
     for i in range(horizon):
-        formatted_response += (f"{forecast_times[i].strftime(date_format)} | {fc['median'][i]:.2f}            |"
-                               f" {fc_drift['median'][i]:.2f}              |"
-              f" [{fc_drift['q05'][i]:.2f}, {fc_drift['q95'][i]:.2f}]    | ~{fc['vol'][i] * 100:.3f}%\n")
+        formatted_response += (
+            f"{forecast_times[i].strftime(date_format)} | {fc['median'][i]:.2f}            |"
+            f" {fc_drift['median'][i]:.2f}              |"
+            f" [{fc_drift['q05'][i]:.2f}, {fc_drift['q95'][i]:.2f}]    | ~{fc['vol'][i] * 100:.3f}%\n"
+        )
 
     return formatted_response

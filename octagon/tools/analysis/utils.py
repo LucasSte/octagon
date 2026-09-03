@@ -9,4 +9,4 @@ def wait(seconds: int):
     """
     time.sleep(seconds)
 
-    return f'Waited {seconds}'
+    return f"Waited {seconds}"

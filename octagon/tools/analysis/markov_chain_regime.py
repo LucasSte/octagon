@@ -4,8 +4,13 @@ import yfinance as yf
 from hmmlearn.hmm import GaussianHMM
 
 
-def fit_hmm(df: pd.DataFrame, n_states: int = 2, features=("log_return", "volatility"),
-            n_iter: int = 1000, random_state: int = 42):
+def fit_hmm(
+    df: pd.DataFrame,
+    n_states: int = 2,
+    features=("log_return", "volatility"),
+    n_iter: int = 1000,
+    random_state: int = 42,
+):
     """
     Fits a GaussianHMM on the chosen feature columns.
 
@@ -19,7 +24,7 @@ def fit_hmm(df: pd.DataFrame, n_states: int = 2, features=("log_return", "volati
 
     model = GaussianHMM(
         n_components=n_states,
-        covariance_type="full",   # lets each regime have its own return/vol correlation structure
+        covariance_type="full",  # lets each regime have its own return/vol correlation structure
         n_iter=n_iter,
         random_state=random_state,
     )
@@ -27,6 +32,7 @@ def fit_hmm(df: pd.DataFrame, n_states: int = 2, features=("log_return", "volati
 
     hidden_states = model.predict(X)
     return model, hidden_states
+
 
 def label_regimes(model: GaussianHMM, return_feature_idx: int = 0) -> dict:
     """
@@ -47,9 +53,15 @@ def label_regimes(model: GaussianHMM, return_feature_idx: int = 0) -> dict:
 
     return labels
 
-def build_regime_filtered_signal(df: pd.DataFrame, hidden_states: np.ndarray, labels: dict,
-                                   fast_window: int = 20, slow_window: int = 50,
-                                   allowed_regimes=("bull/low-vol", "bull")) -> pd.DataFrame:
+
+def build_regime_filtered_signal(
+    df: pd.DataFrame,
+    hidden_states: np.ndarray,
+    labels: dict,
+    fast_window: int = 20,
+    slow_window: int = 50,
+    allowed_regimes=("bull/low-vol", "bull"),
+) -> pd.DataFrame:
     """
     Use regime as a filter on a simple trend-following signal
     """
@@ -64,9 +76,12 @@ def build_regime_filtered_signal(df: pd.DataFrame, hidden_states: np.ndarray, la
 
     # only take the trend signal when the HMM says we're in an allowed regime;
     # otherwise stay flat
-    df["filtered_position"] = np.where(df["regime_label"].isin(allowed_regimes), df["raw_signal"], 0)
+    df["filtered_position"] = np.where(
+        df["regime_label"].isin(allowed_regimes), df["raw_signal"], 0
+    )
 
     return df
+
 
 def backtest(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -78,23 +93,30 @@ def backtest(df: pd.DataFrame) -> pd.DataFrame:
     ret = df["price"].pct_change()
     df["unfiltered_ret"] = df["raw_signal"].shift(1) * ret
     df["filtered_ret"] = df["filtered_position"].shift(1) * ret
-    df["unfiltered_cum"] = ((1 + df["unfiltered_ret"]).cumprod() - 1)*100
-    df["filtered_cum"] = ((1 + df["filtered_ret"]).cumprod() - 1)*100
+    df["unfiltered_cum"] = ((1 + df["unfiltered_ret"]).cumprod() - 1) * 100
+    df["filtered_cum"] = ((1 + df["filtered_ret"]).cumprod() - 1) * 100
     return df
+
 
 def markov_chain_regime(ticker, states):
     # if interval not in {'1d', '60m'}:
     #     return f'Invalid interval: {interval}'
 
     if states != 2 and states != 3:
-        return f'Invalid number of states: {states}'
+        return f"Invalid number of states: {states}"
 
     # if interval == '1d':
     #     period = '360d'
     # else:
     #     period = '180d'
 
-    price = yf.download(ticker, period='360d', interval='1d', auto_adjust=True, progress=False)["Close"].dropna().squeeze()
+    price = (
+        yf.download(
+            ticker, period="360d", interval="1d", auto_adjust=True, progress=False
+        )["Close"]
+        .dropna()
+        .squeeze()
+    )
     df = pd.DataFrame({"price": price})
     df["log_return"] = np.log(df["price"]).diff()
     df["volatility"] = df["log_return"].rolling(10).std()
@@ -108,25 +130,42 @@ def markov_chain_regime(ticker, states):
     model, hidden_states = fit_hmm(df, n_states=states, n_iter=1000)
     labels = label_regimes(model)
 
-    df = build_regime_filtered_signal(df, hidden_states, labels,
-                                      fast_window=20, slow_window=50)
+    df = build_regime_filtered_signal(
+        df, hidden_states, labels, fast_window=20, slow_window=50
+    )
     df = backtest(df.tail(15))
 
     formatted_response = "\nFitted regime means [log_return, volatility]:\n"
     for state, label in labels.items():
-        formatted_response += f"  {label} (state {state}): mean = {model.means_[state]}\n"
+        formatted_response += (
+            f"  {label} (state {state}): mean = {model.means_[state]}\n"
+        )
 
-    formatted_response += '\n'
-    selected_entries = df[["price", "regime_label", "raw_signal",
-                           "filtered_position", "unfiltered_cum", "filtered_cum"]]
+    formatted_response += "\n"
+    selected_entries = df[
+        [
+            "price",
+            "regime_label",
+            "raw_signal",
+            "filtered_position",
+            "unfiltered_cum",
+            "filtered_cum",
+        ]
+    ]
 
-    formatted_response +=  selected_entries.to_string()
+    formatted_response += selected_entries.to_string()
 
-    formatted_response += '\n\n Legend:\n\n '
-    formatted_response += ('\traw_signal: 1 if the rolling 20-element average window is greater '
-                           'than the rolling 50-element average window\n')
-    formatted_response += '\tfiltered_position: 1 if we take the trade signal (bull state)\n'
-    formatted_response += '\tunfiltered_cum: Cumulative returns during the period in %\n'
-    formatted_response += '\tfiltered_cum: Cumulative return during the period in % only when the trade signal is 1\n'
+    formatted_response += "\n\n Legend:\n\n "
+    formatted_response += (
+        "\traw_signal: 1 if the rolling 20-element average window is greater "
+        "than the rolling 50-element average window\n"
+    )
+    formatted_response += (
+        "\tfiltered_position: 1 if we take the trade signal (bull state)\n"
+    )
+    formatted_response += (
+        "\tunfiltered_cum: Cumulative returns during the period in %\n"
+    )
+    formatted_response += "\tfiltered_cum: Cumulative return during the period in % only when the trade signal is 1\n"
 
     return formatted_response

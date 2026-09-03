@@ -38,6 +38,7 @@ def fit_local_level_em(price, n_iter: int = 20, em_vars=None):
 
     return kf, state_means[:, 0]
 
+
 def fit_local_linear_trend_em(price, n_iter: int = 20):
     """
     Local linear trend model with EM-estimated parameters
@@ -50,8 +51,7 @@ def fit_local_linear_trend_em(price, n_iter: int = 20):
     transition_covariance is a 2x2 matrix (level noise, trend noise),
     estimated jointly via EM.
     """
-    transition_matrix = np.array([[1.0, 1.0],
-                                   [0.0, 1.0]])
+    transition_matrix = np.array([[1.0, 1.0], [0.0, 1.0]])
     observation_matrix = np.array([[1.0, 0.0]])
 
     kf = KalmanFilter(
@@ -63,15 +63,20 @@ def fit_local_linear_trend_em(price, n_iter: int = 20):
         observation_covariance=1.0,
     )
 
-    kf = kf.em(price, n_iter=n_iter,
-               em_vars=["transition_covariance", "observation_covariance"])
+    kf = kf.em(
+        price,
+        n_iter=n_iter,
+        em_vars=["transition_covariance", "observation_covariance"],
+    )
 
     state_means, _state_covs = kf.filter(price)
 
     return kf, state_means[:, 0], state_means[:, 1]
 
 
-def build_signals(df: pd.DataFrame, entry_z: float = 1.5, exit_z: float = 0.3, z_window: int = 20) -> pd.DataFrame:
+def build_signals(
+    df: pd.DataFrame, entry_z: float = 1.5, exit_z: float = 0.3, z_window: int = 20
+) -> pd.DataFrame:
     df = df.copy()
     df["deviation"] = df["price"] - df["fair_value"]
 
@@ -109,40 +114,44 @@ def kalman_fair_value(ticker, period, interval, method):
     :param method: level or trend
     :return: The kalman fair value for the last 15 entries beginning from now.
     """
-    if interval not in {'1d', '60m', '30m', '15m'}:
-        return f'Invalid interval: {interval}'
+    if interval not in {"1d", "60m", "30m", "15m"}:
+        return f"Invalid interval: {interval}"
 
-    if period not in {'5d', '6d', '7d', '8d', '9d', '10d'}:
-        return f'Invalid period: {period}'
+    if period not in {"5d", "6d", "7d", "8d", "9d", "10d"}:
+        return f"Invalid period: {period}"
 
-    data = yf.download(ticker, period=period, interval=interval, auto_adjust=True, progress=False)["Close"]
+    data = yf.download(
+        ticker, period=period, interval=interval, auto_adjust=True, progress=False
+    )["Close"]
     data = data.dropna().squeeze()
 
-    formatted_response = ''
+    formatted_response = ""
 
-    if method == 'level':
+    if method == "level":
         kf, fair_value = fit_local_level_em(data.values, n_iter=20)
         trend = None
     else:
         kf, fair_value, trend = fit_local_linear_trend_em(data.values, n_iter=20)
 
-    formatted_response += f'EM-estimated transition covariance: {kf.transition_covariance}\n'
-    formatted_response += f'EM-estimated observation covariance: {kf.observation_covariance}\n\n'
+    formatted_response += (
+        f"EM-estimated transition covariance: {kf.transition_covariance}\n"
+    )
+    formatted_response += (
+        f"EM-estimated observation covariance: {kf.observation_covariance}\n\n"
+    )
 
     df_reset = data.reset_index()
-    if 'Date' in df_reset:
-        date_and_time = df_reset['Date'].dt.strftime('%Y-%m-%d %H:%M:%S')
+    if "Date" in df_reset:
+        date_and_time = df_reset["Date"].dt.strftime("%Y-%m-%d %H:%M:%S")
     else:
-        date_and_time = df_reset['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        date_and_time = df_reset["Datetime"].dt.strftime("%Y-%m-%d %H:%M:%S")
 
-    df = pd.DataFrame({
-        'datetime': date_and_time,
-        'price': data.values,
-        "fair_value": fair_value
-    })
+    df = pd.DataFrame(
+        {"datetime": date_and_time, "price": data.values, "fair_value": fair_value}
+    )
 
     if trend is not None:
-        df['trend'] = trend
+        df["trend"] = trend
 
     df = build_signals(df, entry_z=1.5, exit_z=0.3, z_window=20)
     df = backtest(df)
@@ -154,9 +163,9 @@ def kalman_fair_value(ticker, period, interval, method):
         -1: "Short",
     }
     df["position"] = df["position"].map(position_labels)
-    df.rename(columns={'fair_value': 'fair value'}, inplace=True)
+    df.rename(columns={"fair_value": "fair value"}, inplace=True)
 
-    filtered = df[['datetime', 'price', 'fair value', 'position']].tail(15)
+    filtered = df[["datetime", "price", "fair value", "position"]].tail(15)
 
     formatted_response += filtered.to_string(index=False)
 

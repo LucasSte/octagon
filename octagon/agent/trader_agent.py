@@ -13,7 +13,7 @@ class TraderAgent:
     def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str):
         self.rounds = rounds
         self.initial_prompt = initial_prompt
-        api_key = os.environ.get('OPENAI_API_KEY') or 'not-needed'
+        api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
         self.client = OpenAI(base_url=llm_url, api_key=api_key)
         self.model_name = model_name
 
@@ -58,9 +58,8 @@ class TraderAgent:
         ]
 
         for i in range(self.rounds):
-
             if self.iterations_callback is not None:
-                self.iterations_callback(i+1, self.rounds)
+                self.iterations_callback(i + 1, self.rounds)
 
             if should_stop():
                 break
@@ -88,20 +87,39 @@ class TraderAgent:
                 break
 
             if self.log_callback is not None:
-
-                if response_message.content is not None and len(response_message.content) > 0:
+                if (
+                    response_message.content is not None
+                    and len(response_message.content) > 0
+                ):
                     self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
 
-                if response_message.refusal is not None and len(response_message.refusal) > 0:
+                if (
+                    response_message.refusal is not None
+                    and len(response_message.refusal) > 0
+                ):
                     self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
 
+                if (
+                    hasattr(response_message, "reasoning_content")
+                    and len(response_message.reasoning_content) > 0
+                ):
+                    self.log_callback(
+                        LogType.AGENT_REASONING, response_message.reasoning_content
+                    )
 
-                if hasattr(response_message, 'reasoning_content') and len(response_message.reasoning_content) > 0:
-                    self.log_callback(LogType.AGENT_REASONING, response_message.reasoning_content)
+                if (
+                    hasattr(response_message, "reasoning")
+                    and len(response_message.reasoning) > 0
+                ):
+                    self.log_callback(
+                        LogType.AGENT_REASONING, response_message.reasoning
+                    )
 
-                if hasattr(response_message, 'reasoning') and len(response_message.reasoning) > 0:
-                    self.log_callback(LogType.AGENT_REASONING, response_message.reasoning)
-
-            if not self.dispatcher.dispatch_function(response_message, messages) and self.log_callback is not None:
-                self.log_callback(LogType.ERROR, 'Returned response without tool call. Stopping')
+            if (
+                not self.dispatcher.dispatch_function(response_message, messages)
+                and self.log_callback is not None
+            ):
+                self.log_callback(
+                    LogType.ERROR, "Returned response without tool call. Stopping"
+                )
                 break

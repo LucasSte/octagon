@@ -2,6 +2,7 @@
 Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents for portfolio management.
 """
+
 from octagon.tools.assets.available_assets import list_available_assets
 
 DESCRIPTION_LIST = [
@@ -12,9 +13,9 @@ DESCRIPTION_LIST = [
             "description": "Get the current uninvested balance of the portfolio",
             "returns": {
                 "type": "string",
-                "description": "Formatted string showing the uninvested balance (e.g., 'Your uninvested balance is $1500.00')"
-            }
-        }
+                "description": "Formatted string showing the uninvested balance (e.g., 'Your uninvested balance is $1500.00')",
+            },
+        },
     },
     {
         "type": "function",
@@ -26,20 +27,20 @@ DESCRIPTION_LIST = [
                 "properties": {
                     "ticker": {
                         "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
+                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)",
                     },
                     "amount": {
                         "type": "number",
-                        "description": "The quantity of the asset to buy (decimals accepted)"
-                    }
+                        "description": "The quantity of the asset to buy (decimals accepted)",
+                    },
                 },
-                "required": ["ticker", "amount"]
+                "required": ["ticker", "amount"],
             },
             "returns": {
                 "type": "string",
-                "description": "Confirmation message showing the purchase details and updated balance (e.g., 'Bought 10 units of AAPL at $1500.00. Your new uninvested balance is $500.00.') or error message if insufficient balance"
-            }
-        }
+                "description": "Confirmation message showing the purchase details and updated balance (e.g., 'Bought 10 units of AAPL at $1500.00. Your new uninvested balance is $500.00.') or error message if insufficient balance",
+            },
+        },
     },
     {
         "type": "function",
@@ -51,20 +52,20 @@ DESCRIPTION_LIST = [
                 "properties": {
                     "ticker": {
                         "type": "string",
-                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)"
+                        "description": "The stock ticker symbol (e.g., AAPL, MSFT)",
                     },
                     "amount": {
                         "type": "number",
-                        "description": "The quantity of the asset to sell"
-                    }
+                        "description": "The quantity of the asset to sell",
+                    },
                 },
-                "required": ["ticker", "amount"]
+                "required": ["ticker", "amount"],
             },
             "returns": {
                 "type": "string",
-                "description": "Confirmation message showing the sale details and updated balance (e.g., 'Sold 5 units of AAPL at $750.00. You new uninvested balance is $2250.00.') or error message"
-            }
-        }
+                "description": "Confirmation message showing the sale details and updated balance (e.g., 'Sold 5 units of AAPL at $750.00. You new uninvested balance is $2250.00.') or error message",
+            },
+        },
     },
     {
         "type": "function",
@@ -73,9 +74,9 @@ DESCRIPTION_LIST = [
             "description": "Get a formatted display of the current portfolio including assets and balance",
             "returns": {
                 "type": "string",
-                "description": "Formatted string showing portfolio balance and assets with quantities and market values, including a legend (e.g., 'Balance: $1500.00 \\n\\nAssets: \\nAAPL (Apple Inc.): 10.00 <=> $1500.00\\n...')"
-            }
-        }
+                "description": "Formatted string showing portfolio balance and assets with quantities and market values, including a legend (e.g., 'Balance: $1500.00 \\n\\nAssets: \\nAAPL (Apple Inc.): 10.00 <=> $1500.00\\n...')",
+            },
+        },
     },
     {
         "type": "function",
@@ -85,11 +86,9 @@ DESCRIPTION_LIST = [
             "returns": {
                 "type": "string",
                 "description": "Formatted string listing the assets available to trade",
-            }
-        }
+            },
+        },
     },
 ]
 
-DISPATCH_DICT = {
-    'list_available_assets': list_available_assets
-}
+DISPATCH_DICT = {"list_available_assets": list_available_assets}

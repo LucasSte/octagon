@@ -4,8 +4,12 @@ import yfinance as yf
 from pandas_datareader import data as pdr
 
 
-def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
-                      start: str = "2015-01-01", end: str | None = None) -> pd.DataFrame:
+def fetch_ff_factors(
+    model: str = "5factor",
+    frequency: str = "monthly",
+    start: str = "2015-01-01",
+    end: str | None = None,
+) -> pd.DataFrame:
     """
     Pulls factor return data from Kenneth French's data library via
     pandas_datareader.
@@ -18,14 +22,24 @@ def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
     percent, e.g. 0.53 meaning 0.53%, so this divides by 100).
     """
     if model == "3factor":
-        dataset = "F-F_Research_Data_Factors" if frequency == "monthly" else "F-F_Research_Data_Factors_daily"
+        dataset = (
+            "F-F_Research_Data_Factors"
+            if frequency == "monthly"
+            else "F-F_Research_Data_Factors_daily"
+        )
     elif model == "5factor":
-        dataset = "F-F_Research_Data_5_Factors_2x3" if frequency == "monthly" else "F-F_Research_Data_5_Factors_2x3_daily"
+        dataset = (
+            "F-F_Research_Data_5_Factors_2x3"
+            if frequency == "monthly"
+            else "F-F_Research_Data_5_Factors_2x3_daily"
+        )
     else:
         raise ValueError("model must be '3factor' or '5factor'")
 
     raw = pdr.DataReader(dataset, "famafrench", start=start, end=end)
-    factors = raw[0].copy()  # index 0 = the actual factor return table (index 1 is annual data)
+    factors = raw[
+        0
+    ].copy()  # index 0 = the actual factor return table (index 1 is annual data)
 
     # IMPORTANT: the French library's raw CSVs frequently have leading/
     # trailing whitespace in column headers (e.g. "RF " or " Mkt-RF"),
@@ -57,8 +71,17 @@ def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
 
     return factors
 
-def fetch_stock_returns(ticker: str, start: str, end: str | None = None, frequency: str = "monthly") -> pd.Series:
-    price = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)["Close"].dropna().squeeze()
+
+def fetch_stock_returns(
+    ticker: str, start: str, end: str | None = None, frequency: str = "monthly"
+) -> pd.Series:
+    price = (
+        yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)[
+            "Close"
+        ]
+        .dropna()
+        .squeeze()
+    )
 
     if frequency == "monthly":
         price = price.resample("ME").last()
@@ -73,8 +96,13 @@ def fetch_stock_returns(ticker: str, start: str, end: str | None = None, frequen
 
     return returns
 
-def run_ff_regression(stock_returns: pd.Series, factors: pd.DataFrame,
-                       hac: bool = False, hac_maxlags: int | None = None) -> tuple:
+
+def run_ff_regression(
+    stock_returns: pd.Series,
+    factors: pd.DataFrame,
+    hac: bool = False,
+    hac_maxlags: int | None = None,
+) -> tuple:
     """
     Regresses (stock_return - RF) on the factor columns.
 
@@ -130,27 +158,30 @@ def fama_french_factor(ticker, model, frequency):
     :param frequency: monthly or daily
     :return:
     """
-    if frequency == 'daily':
+    if frequency == "daily":
         window_years = 1
         fetch_years_back = 2
-    elif frequency == 'monthly':
+    elif frequency == "monthly":
         window_years = 5
         fetch_years_back = 8
     else:
-        return f'Invalid frequency: {frequency}'
+        return f"Invalid frequency: {frequency}"
 
-    fetch_start = (pd.Timestamp.today() - pd.DateOffset(years=fetch_years_back)).strftime("%Y-%m-%d")
+    fetch_start = (
+        pd.Timestamp.today() - pd.DateOffset(years=fetch_years_back)
+    ).strftime("%Y-%m-%d")
 
-    if model != '3factor' and model != '5factor':
-        return f'Invalid model: {model}'
+    if model != "3factor" and model != "5factor":
+        return f"Invalid model: {model}"
 
     factors = fetch_ff_factors(model=model, frequency=frequency, start=fetch_start)
     stock_returns = fetch_stock_returns(ticker, start=fetch_start, frequency=frequency)
-    if ((frequency == 'daily' and len(stock_returns) < fetch_years_back*240)
-            or (frequency == 'monthly' and len(stock_returns) < fetch_years_back*12)):
-        return f'Fama french factor unavailable for ticker {ticker}'
+    if (frequency == "daily" and len(stock_returns) < fetch_years_back * 240) or (
+        frequency == "monthly" and len(stock_returns) < fetch_years_back * 12
+    ):
+        return f"Fama french factor unavailable for ticker {ticker}"
 
-    use_hac = frequency == 'daily'
+    use_hac = frequency == "daily"
     _result_full, merged = run_ff_regression(stock_returns, factors, hac=use_hac)
     window = window_years * (12 if frequency == "monthly" else 252)
 
@@ -160,30 +191,40 @@ def fama_french_factor(ticker, model, frequency):
 
     if use_hac:
         maxlags = max(1, int(4 * (window / 100) ** (2 / 9)))
-        result = sm.OLS(y_window, X_window).fit(cov_type="HAC", cov_kwds={"maxlags": maxlags})
+        result = sm.OLS(y_window, X_window).fit(
+            cov_type="HAC", cov_kwds={"maxlags": maxlags}
+        )
     else:
         result = sm.OLS(y_window, X_window).fit()
 
-    formatted_response = ''
-    formatted_response += (f"Primary regression window: {windowed.index[0].date()} to {windowed.index[-1].date()} "
-                           f"({len(windowed)} {'months' if frequency == 'monthly' else 'days'})\n")
+    formatted_response = ""
+    formatted_response += (
+        f"Primary regression window: {windowed.index[0].date()} to {windowed.index[-1].date()} "
+        f"({len(windowed)} {'months' if frequency == 'monthly' else 'days'})\n"
+    )
 
     formatted_response += str(result.summary())
 
     if use_hac:
-        formatted_response += (f"\n(Standard errors above are Newey-West/HAC-corrected, "
-              f"maxlags={result.cov_kwds['maxlags']})\n")
+        formatted_response += (
+            f"\n(Standard errors above are Newey-West/HAC-corrected, "
+            f"maxlags={result.cov_kwds['maxlags']})\n"
+        )
 
     formatted_response += "\n\n--- Interpretation ---\n"
     alpha_annualized = result.params["const"] * (12 if frequency == "monthly" else 252)
 
-    formatted_response += (f"Annualized alpha: {alpha_annualized:.4f} "
-          f"({'not' if result.pvalues['const'] > 0.05 else ''} statistically significant, "
-          f"p={result.pvalues['const']:.3f})\n")
+    formatted_response += (
+        f"Annualized alpha: {alpha_annualized:.4f} "
+        f"({'not' if result.pvalues['const'] > 0.05 else ''} statistically significant, "
+        f"p={result.pvalues['const']:.3f})\n"
+    )
 
     for factor in [c for c in factors.columns if c != "RF"]:
-        formatted_response+= f"{factor} beta: {result.params[factor]:.3f} (p={result.pvalues[factor]:.3f})\n"
-    formatted_response += (f"R-squared: {result.rsquared:.3f}  "
-          f"(fraction of {ticker}'s return variance explained by these factors)")
+        formatted_response += f"{factor} beta: {result.params[factor]:.3f} (p={result.pvalues[factor]:.3f})\n"
+    formatted_response += (
+        f"R-squared: {result.rsquared:.3f}  "
+        f"(fraction of {ticker}'s return variance explained by these factors)"
+    )
 
     return formatted_response

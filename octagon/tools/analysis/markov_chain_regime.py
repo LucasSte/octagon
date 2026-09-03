@@ -78,8 +78,8 @@ def backtest(df: pd.DataFrame) -> pd.DataFrame:
     ret = df["price"].pct_change()
     df["unfiltered_ret"] = df["raw_signal"].shift(1) * ret
     df["filtered_ret"] = df["filtered_position"].shift(1) * ret
-    df["unfiltered_cum"] = (1 + df["unfiltered_ret"]).cumprod() - 1
-    df["filtered_cum"] = (1 + df["filtered_ret"]).cumprod() - 1
+    df["unfiltered_cum"] = ((1 + df["unfiltered_ret"]).cumprod() - 1)*100
+    df["filtered_cum"] = ((1 + df["filtered_ret"]).cumprod() - 1)*100
     return df
 
 def markov_chain_regime(ticker, states):
@@ -110,7 +110,7 @@ def markov_chain_regime(ticker, states):
 
     df = build_regime_filtered_signal(df, hidden_states, labels,
                                       fast_window=20, slow_window=50)
-    df = backtest(df)
+    df = backtest(df.tail(15))
 
     formatted_response = "\nFitted regime means [log_return, volatility]:\n"
     for state, label in labels.items():
@@ -118,8 +118,15 @@ def markov_chain_regime(ticker, states):
 
     formatted_response += '\n'
     selected_entries = df[["price", "regime_label", "raw_signal",
-                           "filtered_position", "unfiltered_cum", "filtered_cum"]].tail(15)
+                           "filtered_position", "unfiltered_cum", "filtered_cum"]]
 
     formatted_response +=  selected_entries.to_string()
+
+    formatted_response += '\n\n Legend:\n\n '
+    formatted_response += ('\traw_signal: 1 if the rolling 20-element average window is greater '
+                           'than the rolling 50-element average window\n')
+    formatted_response += '\tfiltered_position: 1 if we take the trade signal (bull state)\n'
+    formatted_response += '\tunfiltered_cum: Cumulative returns during the period in %\n'
+    formatted_response += '\tfiltered_cum: Cumulative return during the period in % only when the trade signal is 1\n'
 
     return formatted_response

@@ -67,6 +67,7 @@ def validate_date(date_string):
     try:
         # Parse the date string
         date_obj = datetime.strptime(date_string, '%Y-%m-%d')
+        date_obj = date_obj.replace(tzinfo=ZoneInfo("America/New_York"))
 
         # Check if date is not in the future
         today = datetime.now(ZoneInfo("America/New_York"))
@@ -234,8 +235,11 @@ def format_historical_data_pandas(historical_data):
         'High': df_reset['High'].round(2),
         'Low': df_reset['Low'].round(2),
         'Close': df_reset['Close'].round(2),
-        'Volume': df_reset['Volume'].apply(lambda x: f'{x:e}')
+        'Volume': df_reset['Volume'].apply(lambda x: f'{x:e}'),
+        'Return (%)': df_reset['Close'].pct_change() * 100
     })
+
+    result.set_index('Datetime', inplace=True)
 
     formatted = result.to_string()
 

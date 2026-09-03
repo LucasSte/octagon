@@ -48,7 +48,7 @@ def formatted_historical_data(ticker, start, end, interval):
     if historical_data.empty:
         return f'No data available for {ticker}'
 
-    return format_historical_data_markdown(historical_data)
+    return format_historical_data_pandas(historical_data)
 
 
 def formatted_intraday_data(ticker, period, interval):
@@ -164,7 +164,10 @@ def get_options_chain(symbol, expiration_date=None):
     exp_date = expiration_date or expirations[0]
 
 
-    opt = ticker.option_chain(exp_date)
+    try:
+        opt = ticker.option_chain(exp_date)
+    except ValueError as v:
+        return str(v)
 
     names = ['1', '2', '3', '4', '5']
     top_calls = opt.calls.nlargest(5, 'volume')[['strike', 'lastPrice', 'volume', 'openInterest', 'impliedVolatility']]

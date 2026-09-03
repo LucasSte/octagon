@@ -5,7 +5,7 @@ from pandas_datareader import data as pdr
 
 
 def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
-                      start: str = "2015-01-01", end: str = None) -> pd.DataFrame:
+                      start: str = "2015-01-01", end: str | None = None) -> pd.DataFrame:
     """
     Pulls factor return data from Kenneth French's data library via
     pandas_datareader.
@@ -57,7 +57,7 @@ def fetch_ff_factors(model: str = "5factor", frequency: str = "monthly",
 
     return factors
 
-def fetch_stock_returns(ticker: str, start: str, end: str = None, frequency: str = "monthly") -> pd.Series:
+def fetch_stock_returns(ticker: str, start: str, end: str | None = None, frequency: str = "monthly") -> pd.Series:
     price = yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)["Close"].dropna().squeeze()
 
     if frequency == "monthly":
@@ -74,7 +74,7 @@ def fetch_stock_returns(ticker: str, start: str, end: str = None, frequency: str
     return returns
 
 def run_ff_regression(stock_returns: pd.Series, factors: pd.DataFrame,
-                       hac: bool = False, hac_maxlags: int = None) -> tuple:
+                       hac: bool = False, hac_maxlags: int | None = None) -> tuple:
     """
     Regresses (stock_return - RF) on the factor columns.
 
@@ -150,8 +150,8 @@ def fama_french_factor(ticker, model, frequency):
             or (frequency == 'monthly' and len(stock_returns) < fetch_years_back*12)):
         return f'Fama french factor unavailable for ticker {ticker}'
 
-    use_hac = True if frequency == 'daily' else False
-    result_full, merged = run_ff_regression(stock_returns, factors, hac=use_hac)
+    use_hac = frequency == 'daily'
+    _result_full, merged = run_ff_regression(stock_returns, factors, hac=use_hac)
     window = window_years * (12 if frequency == "monthly" else 252)
 
     windowed = merged.tail(window)

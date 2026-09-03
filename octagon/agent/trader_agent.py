@@ -17,7 +17,7 @@ class TraderAgent:
         self.client = OpenAI(base_url=llm_url, api_key=api_key)
         self.model_name = model_name
 
-        self.portfolio = Portfolio(10000, dict())
+        self.portfolio = Portfolio(10000, {})
 
         self.available_tools = create_tools_list()
         self.dispatcher = ToolDispatch(self.portfolio)
@@ -77,6 +77,7 @@ class TraderAgent:
                         "top_k": 20,
                     },
                 )
+            # ruff: noqa: BLE001
             except Exception as e:
                 if self.log_callback is not None:
                     self.log_callback(LogType.ERROR, str(e))
@@ -101,7 +102,6 @@ class TraderAgent:
                 if hasattr(response_message, 'reasoning') and len(response_message.reasoning) > 0:
                     self.log_callback(LogType.AGENT_REASONING, response_message.reasoning)
 
-            if not self.dispatcher.dispatch_function(response_message, messages):
-                if self.log_callback is not None:
-                    self.log_callback(LogType.ERROR, 'Returned response without tool call. Stopping')
-                    break
+            if not self.dispatcher.dispatch_function(response_message, messages) and self.log_callback is not None:
+                self.log_callback(LogType.ERROR, 'Returned response without tool call. Stopping')
+                break

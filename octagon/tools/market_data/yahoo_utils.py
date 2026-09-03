@@ -66,8 +66,7 @@ allowed_intraday_periods = {'1d', '2d', '3d'}
 def validate_date(date_string):
     try:
         # Parse the date string
-        date_obj = datetime.strptime(date_string, '%Y-%m-%d')
-        date_obj = date_obj.replace(tzinfo=ZoneInfo("America/New_York"))
+        date_obj = datetime.strptime(date_string, '%Y-%m-%d').replace(tzinfo=ZoneInfo("America/New_York"))
 
         # Check if date is not in the future
         today = datetime.now(ZoneInfo("America/New_York"))

@@ -1,0 +1,2 @@
+check-lint:
+	ruff check

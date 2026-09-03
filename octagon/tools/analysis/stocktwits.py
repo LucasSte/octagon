@@ -8,6 +8,7 @@ def stocktwits_sentiments(ticker):
     try:
         with urlopen(req, timeout=10) as r:
             data = json.loads(r.read())
+    # ruff: noqa: BLE001
     except Exception:
         return 'Unable to reach stocktwits'
 

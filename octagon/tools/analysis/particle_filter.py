@@ -164,7 +164,7 @@ def sv_particle_filter(returns: np.ndarray, mu: float, phi: float, sigma_eta: fl
     filtered_vol = np.exp(filtered_h / 2)
     return filtered_h, filtered_vol, ess_history, h_particles, weights
 
-def estimate_drift(returns: np.ndarray, lookback: int = None) -> float:
+def estimate_drift(returns: np.ndarray, lookback: int | None = None) -> float:
     """
     Per-period drift = mean log-return over the trailing `lookback` bars
     (or the full series if lookback is None).
@@ -234,7 +234,6 @@ def particle_filter_forecast(ticker, granularity):
         return f'Invalid granularity: {granularity}'
 
     cfg = GRANULARITY_CONFIG[granularity]
-    periods_per_year = cfg["periods_per_year"]
     unit = cfg["unit"]
 
     returns, price = fetch_returns(ticker, granularity)
@@ -244,7 +243,7 @@ def particle_filter_forecast(ticker, granularity):
           f"~{np.exp(params['mu']/2)*100:.3f}%), phi={params['phi']:.2f}, "
           f"sigma_eta={params['sigma_eta']:.3f}\n\n")
 
-    filtered_h, filtered_vol, ess_history, h_particles, weights = sv_particle_filter(
+    _filtered_h, filtered_vol, ess_history, h_particles, weights = sv_particle_filter(
         returns.values, **params, n_particles=n_particles, dof=dof,
     )
 

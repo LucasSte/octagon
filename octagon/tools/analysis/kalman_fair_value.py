@@ -34,7 +34,7 @@ def fit_local_level_em(price, n_iter: int = 20, em_vars=None):
 
     kf = kf.em(price, n_iter=n_iter, em_vars=em_vars)
 
-    state_means, state_covs = kf.filter(price)
+    state_means, _state_covs = kf.filter(price)
 
     return kf, state_means[:, 0]
 
@@ -66,7 +66,7 @@ def fit_local_linear_trend_em(price, n_iter: int = 20):
     kf = kf.em(price, n_iter=n_iter,
                em_vars=["transition_covariance", "observation_covariance"])
 
-    state_means, state_covs = kf.filter(price)
+    state_means, _state_covs = kf.filter(price)
 
     return kf, state_means[:, 0], state_means[:, 1]
 

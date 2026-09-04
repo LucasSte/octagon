@@ -57,9 +57,25 @@ class TraderAgent:
             }
         ]
 
-        for i in range(self.rounds):
-            if self.iterations_callback is not None:
+        for i in range(self.rounds + 1):
+            if self.iterations_callback is not None and i < self.rounds:
                 self.iterations_callback(i + 1, self.rounds)
+
+            if i == self.rounds - 1:
+                new_content = [
+                    {
+                        "type": "text",
+                        "text": "This is your last iteration in this trading round. I suggest you write a summary"
+                        " of your actions with the write_memory function so that you maintain a good knowledge "
+                        "for the next round.",
+                    }
+                ]
+                messages.append(
+                    {
+                        "role": "user",
+                        "content": new_content,
+                    }
+                )
 
             if should_stop():
                 break

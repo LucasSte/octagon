@@ -8,7 +8,6 @@ from octagon.tools.analysis.kalman_fair_value import kalman_fair_value
 from octagon.tools.analysis.markov_chain_regime import markov_chain_regime
 from octagon.tools.analysis.particle_filter import particle_filter_forecast
 from octagon.tools.analysis.stocktwits import stocktwits_sentiments
-from octagon.tools.utilities.utils import wait
 
 DESCRIPTION_LIST = [
     {
@@ -189,5 +188,4 @@ DISPATCH_DICT = {
     "markov_chain_regime": markov_chain_regime,
     "particle_filter_forecast": particle_filter_forecast,
     "stocktwits_sentiments": stocktwits_sentiments,
-    "wait": wait,
 }

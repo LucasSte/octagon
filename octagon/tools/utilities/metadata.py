@@ -57,12 +57,12 @@ DESCRIPTION_LIST = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "content": {
+                    "memory": {
                         "type": "string",
                         "description": "An optional summary of what you did in this run.",
                     }
                 },
-                "required": [],
+                "required": ["memory"],
             },
             "returns": {
                 "type": "string",

@@ -21,7 +21,7 @@ def write_memory(content: str):
     return "Wrote successfully to memory."
 
 
-def stop(memory: str | None = None):
+def stop(memory: str):
     """
     Stop running the agent at the end of trading day
     """

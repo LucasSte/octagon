@@ -89,6 +89,17 @@ DESCRIPTION_LIST = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_session_history",
+            "description": "List your past ten trades",
+            "returns": {
+                "type": "string",
+                "description": "A list containing your past ten trades.",
+            },
+        },
+    },
 ]
 
 DISPATCH_DICT = {"list_available_assets": list_available_assets}

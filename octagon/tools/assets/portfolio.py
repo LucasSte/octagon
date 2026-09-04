@@ -25,6 +25,7 @@ class Portfolio:
         self.balance = balance
         self.portfolio_map = portfolio_map
         self.interface_callback: Callable | None = None
+        self.session_history = []
 
     def get_balance(self):
         return f"Your uninvested balance is ${self.balance:.2f}"
@@ -52,6 +53,11 @@ class Portfolio:
             )
 
         self.update_interface()
+
+        if len(self.session_history) > 10:
+            self.session_history.pop(0)
+        self.session_history.append(f"Buy {amount} units of {ticker}")
+
         return f"Bought {amount} units of {ticker} at ${total:.2f}. Your new uninvested balance is ${self.balance:.2f}."
 
     # Spot trade
@@ -100,6 +106,10 @@ class Portfolio:
         self.update_interface()
         message += f"Sold {amount} units of {ticker} at ${total:.2f}. You new uninvested balance is ${self.balance:.2f}."
 
+        if len(self.session_history) > 10:
+            self.session_history.pop(0)
+        self.session_history.append(f"Sell {amount} units of {ticker}")
+
         return message
 
     def get_formatted_portfolio(self):
@@ -137,6 +147,7 @@ class Portfolio:
             "buy_item": instance.buy_item,
             "sell_item": instance.sell_item,
             "get_formatted_portfolio": instance.get_formatted_portfolio,
+            "get_session_history": instance.get_session_history,
         }
         return dispatch_dict
 
@@ -193,3 +204,9 @@ class Portfolio:
                 quantity=possession["quantity"],
                 purchase_history=formatted_history,
             )
+
+    def get_session_history(self):
+        formatted_response = "Your past ten trades:\n"
+        for item in self.session_history:
+            formatted_response += f"{item}\n"
+        return formatted_response

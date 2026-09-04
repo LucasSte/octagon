@@ -201,6 +201,24 @@ class TestPortfolio(unittest.TestCase):
         self.portfolio.sell_item("AAPL", 1)
         self.assertEqual(self.portfolio.portfolio_map["AAPL"].purchase_value, 120.0)
 
+    @patch("octagon.tools.assets.portfolio.yahoo.real_time_price")
+    def test_floating_points(self, mock_price):
+        mock_price.return_value = 60.0
+        self.portfolio.buy_item("AAPL", 1 / 3)
+        mock_price.return_value = 90.0
+        self.portfolio.buy_item("AAPL", 1 / 3)
+
+        self.assertEqual(self.portfolio.portfolio_map["AAPL"].quantity, 2 / 3)
+
+        self.portfolio.save()
+        self.portfolio.portfolio_map = {}
+        self.portfolio.load()
+        self.assertEqual(self.portfolio.portfolio_map["AAPL"].quantity, 2 / 3)
+
+        mock_price.return_value = 120.0
+        self.portfolio.buy_item("AAPL", 1 / 3)
+        self.assertEqual(self.portfolio.portfolio_map["AAPL"].quantity, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,3 +1,5 @@
+import os
+
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.tools.market_data.yahoo import today_date_time
@@ -22,6 +24,11 @@ if __name__ == "__main__":
     Today's date is {today_date_time()}
     """
     rounds = 30
+
+    if os.path.exists("memory.txt"):
+        with open("memory.text", "r") as f:
+            lines = f.readlines()
+            initial_prompt += f"\n\nYour memory says:\n {lines}"
 
     trader_agent = TraderAgent(rounds, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)

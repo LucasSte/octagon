@@ -115,11 +115,15 @@ class TraderAgent:
                         LogType.AGENT_REASONING, response_message.reasoning
                     )
 
-            if (
-                not self.dispatcher.dispatch_function(response_message, messages)
-                and self.log_callback is not None
-            ):
+            executed_action, has_stop = self.dispatcher.dispatch_function(
+                response_message, messages
+            )
+            if not executed_action and self.log_callback is not None:
                 self.log_callback(
                     LogType.ERROR, "Returned response without tool call. Stopping"
                 )
+                break
+
+            if has_stop:
+                self.log_callback(LogType.INFO, "Stop requested by agent.")
                 break

@@ -38,7 +38,8 @@ DESCRIPTION_LIST = [
                 "properties": {
                     "content": {
                         "type": "string",
-                        "description": "Summary of what you did in this run.",
+                        "description": "Summary of what you did in this run. Do not summarize your portfolio, as it is "
+                        "already stored automatically in a separate file.",
                     }
                 },
                 "required": ["content"],

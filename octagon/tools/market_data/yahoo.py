@@ -11,7 +11,7 @@ FUNCTIONS TO BE USED AS TOOLS FOR AGENTS.
 def formatted_price(ticker):
     """Return ticker current price formatted for LLM"""
     price = real_time_price(ticker)
-    return f"{ticker}: ${price}"
+    return f"{ticker}: ${price:.2f}"
 
 
 def today_date_time():

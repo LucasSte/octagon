@@ -80,8 +80,9 @@ class ToolDispatch:
 
                 if self.tool_status_callback is not None:
                     tool_log = tool_call.function.name + "("
-                    for item in parameters.values():
-                        tool_log += f"{item},"
+                    if tool_call.function.name not in ["write_memory", "stop"]:
+                        for item in parameters.values():
+                            tool_log += f"{item},"
                     tool_log += ")"
                     self.tool_status_callback(tool_log)
 

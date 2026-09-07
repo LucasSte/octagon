@@ -200,8 +200,22 @@ class Dashboard(App):
                         LogType.INFO, "Successfully loaded portfolio.json"
                     )
             case "portfolio":
-                self.main_log_update(LogType.INFO, "Calculating portoflio value ...")
+                self.main_log_update(LogType.INFO, "Calculating portfolio value ...")
                 self.print_portfolio()
+            case "help":
+                help_message = """
+Available commands:
+- `help`: Show available commands.
+- `quit`: Stop agent and exit interface.
+- `start`: Start trader agent.
+- `stop`: Stop agent.
+- `save`: Save portfolio state in portfolio.json.
+- `load`: Load portfolio from portfolio.json.
+- `portfolio`: Print total porfolio value with profits and losses.
+                """
+                self.main_log_update(LogType.INFO, help_message)
+            case _:
+                self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
 
     def stop_work(self):
         if self.active_worker is not None:

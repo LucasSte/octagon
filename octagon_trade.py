@@ -4,7 +4,7 @@ from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.tools.market_data.yahoo import today_date_time
 
-MODEL = "qwen3.8-27b"
+MODEL = "Ternary-Bonsai-27B-Q2_0.gguf"
 URL = "http://localhost:1234/v1"
 
 if __name__ == "__main__":
@@ -23,14 +23,14 @@ if __name__ == "__main__":
     
     Today's date is {today_date_time()}
     """
-    rounds = 30
+    iterations = 15
 
     if os.path.exists("memory.txt"):
-        with open("memory.text", "r") as f:
+        with open("memory.txt", "r") as f:
             lines = f.readlines()
             initial_prompt += f"\n\nYour memory says:\n {lines}"
 
-    trader_agent = TraderAgent(rounds, initial_prompt, URL, MODEL)
+    trader_agent = TraderAgent(iterations, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()

@@ -37,7 +37,7 @@ def rate_limit(max_per_second=2):
 def real_time_price(ticker):
     # Get stock info
     stock = yf.Ticker(ticker)
-    return stock.info["currentPrice"]
+    return stock.fast_info["lastPrice"]
 
 
 @rate_limit(max_per_second=2)

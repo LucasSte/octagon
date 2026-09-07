@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     Today's date is {today_date_time()}
     """
-    iterations = 15
+    iterations = 30
 
     if os.path.exists("memory.txt"):
         with open("memory.txt", "r") as f:

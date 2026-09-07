@@ -17,7 +17,9 @@ if __name__ == "__main__":
     
     Do not put more than 70% of your money in a single asset.
     
-    For day trading, gains of 1% or more are significant to lock profits.
+    Decide reasonable (at least 1%) profit targets before entering the positon, and write them on memory for next 
+    rounds.
+    
     Besides monitoring the assets you've purchased, be open to new opportunities in the basket of 
     available assets, so check them during the day as well.
     

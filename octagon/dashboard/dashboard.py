@@ -1,3 +1,5 @@
+import textwrap
+
 from rich.panel import Panel
 from rich.text import Text
 from textual import work
@@ -203,16 +205,16 @@ class Dashboard(App):
                 self.main_log_update(LogType.INFO, "Calculating portfolio value ...")
                 self.print_portfolio()
             case "help":
-                help_message = """
-Available commands:
-- `help`: Show available commands.
-- `quit`: Stop agent and exit interface.
-- `start`: Start trader agent.
-- `stop`: Stop agent.
-- `save`: Save portfolio state in portfolio.json.
-- `load`: Load portfolio from portfolio.json.
-- `portfolio`: Print total porfolio value with profits and losses.
-                """
+                help_message = textwrap.dedent("""
+                    Available commands:
+                    - `help`: Show available commands.
+                    - `quit`: Stop agent and exit interface.
+                    - `start`: Start trader agent.
+                    - `stop`: Stop agent.
+                    - `save`: Save portfolio state in portfolio.json.
+                    - `load`: Load portfolio from portfolio.json.
+                    - `portfolio`: Print total porfolio value with profits and losses.
+                """)
                 self.main_log_update(LogType.INFO, help_message)
             case _:
                 self.main_log_update(LogType.ERROR, f"Unknown command: {command}")

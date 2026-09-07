@@ -4,7 +4,7 @@ from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.tools.market_data.yahoo import today_date_time
 
-MODEL = "Ternary-Bonsai-27B-Q2_0.gguf"
+MODEL = "qwen3.8-27b"
 URL = "http://localhost:1234/v1"
 
 if __name__ == "__main__":
@@ -17,8 +17,8 @@ if __name__ == "__main__":
     
     Do not put more than 70% of your money in a single asset.
     
-    Decide reasonable (at least 1%) profit targets before entering the positon, and write them on memory for next 
-    rounds.
+    Decide realistic profit targets before entering the positon, and write them on memory for next 
+    rounds. Unless there is a market downturn, stick to the targets.
     
     Besides monitoring the assets you've purchased, be open to new opportunities in the basket of 
     available assets, so check them during the day as well.

@@ -53,3 +53,7 @@ class TestPortfolio(unittest.TestCase):
 
     def test_stocktwits_sentiments(self):
         print(stocktwits_sentiments(self.ticker))
+
+
+if __name__ == "__main__":
+    unittest.main()

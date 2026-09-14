@@ -1,0 +1,5 @@
+2026-09-14 session 2 complete. Portfolio ~$10,140 (+$130 today). Holdings: MSFT 8 sh (last $507.60, target $535, stop $475), NVDA 14 sh (last $212.20, target $235, stop $198), TSLA 5 sh (last $360.99, target $390, stop $338), QCOM 5 sh @ $180.71 (last $181.17, target $194/stretch $205, stop $171). Cash $377.64.
+
+New trade this round: bought 5 QCOM after semi-sector gap-down morning — QCOM was the only name to fully recover its gap (relative strength), with bull HMM regime, bullish 09-18 options flow (2.15:1 calls:puts), 50%/0% sentiment, mean analyst target $194.
+
+Key watch items next round: (1) 09-18 is catalyst week for BOTH NVDA (calls 71.8k vs 42.2k) and QCOM options expiries — monitor stops $198/$171 closely; (2) ASML still -6.3% with no recovery but analysts mean target +35% — watchlist only, enter if stabilizes above ~$1650; (3) NVDA in bear regime but below Kalman FV ~$221 — hold per thesis. Stick to targets/stops unless market downturn.

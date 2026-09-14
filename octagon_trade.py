@@ -25,7 +25,7 @@ if __name__ == "__main__":
     
     Today's date is {today_date_time()}
     """
-    iterations = 30
+    iterations = 35
 
     if os.path.exists("memory.txt"):
         with open("memory.txt", "r") as f:
@@ -36,3 +36,4 @@ if __name__ == "__main__":
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()
+    # READ memory function!

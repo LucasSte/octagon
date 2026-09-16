@@ -112,7 +112,7 @@ def markov_chain_regime(ticker, states):
 
     price = (
         yf.download(
-            ticker, period="360d", interval="1d", auto_adjust=True, progress=False
+            ticker, period="720d", interval="1d", auto_adjust=True, progress=False
         )["Close"]
         .dropna()
         .squeeze()

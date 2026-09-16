@@ -38,3 +38,4 @@ if __name__ == "__main__":
     dashboard.run()
     # READ memory function!
     # Improve portfolio formatting
+    # Markov chain may need to get more robuts

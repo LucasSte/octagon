@@ -1,0 +1,8 @@
+2026-09-17 SESSION round 2 (~11:20-12:09, market OPEN, next round resumes later). MARKET: tech-led V-recovery HELD all midday; quiet stable consolidation, NVDA bull/low-vol regime. No stops hit.
+TRADES THIS ROUND: (1) SOLD 1 AMD @ $543.56 — hit $540 target, locked +$31.06 (+6.1% from 512.50 close). (2) BOUGHT 1.5 AMZN @ $251.56 (total $377.34) — strongest Fri 09-18 mega-expiry call flow in basket (z=2.76, vol 168k, calls 250/252.5/255), analysts 59 buy/0 sell mean PT $328, Kalman fair 248.62.
+POSITIONS NOW (~12:09): MSFT 6 @495.74 | NVDA 11 @218.91 | TSLA 5 @367.67 | QCOM 7 @190.11 (firm) | AAPL 1.9 @336.08 (firm) | AVGO 1 @348.02 (SOFTENING from 350.67 high, drift 350→348.2) | AMZN 1.5 @251.28 (pulling back toward 250). Cash $324.15. Total ~$10,9xx. All well under 70% rule.
+TARGETS/STOPS: AMZN 1.5sh tgt $255(pin)/$257.5(run), STP $248.5 (below Kalman fair 248.62 & day low 249.24) — ADD ~1.28sh if pulls to $250 (→2.78sh avg ~250.9). AVGO 1sh tgt $355/stp $342 (WATCH: softening 350→348.2; if breaks 347 consider trimming, hard stop 342). QCOM 7sh tgt $194/stp $171. AAPL 1.9sh tgt $345/stp $326. MSFT 6sh tgt $535/stp $475. NVDA 11sh tgt $235/stp $198 (bull regime, new highs). TSLA 5sh tgt $390/stp $338.
+CASH $324: deploy on AMZN pullback to $250 (primary) OR MRNA 150-152 (MRNA 156.31, still bear regime +spike, do NOT chase).
+AVOID: GS, BA (downtrends), UNH (rangebound), MRNA until 150-152 pullback.
+KEY RISK: yesterday's broad selloff started ~14:30 — if it recurs = DEFENSIVE, honor all stops, no new buys.
+DECISION TREE NEXT ROUND: (a) broad selloff resumes = DEFENSIVE, honor stops, no new buys. (b) recovery holds = hold to targets; AMZN add at 250, sell AMZN into 255-257.5 pin at Fri 09-18 expiry; watch AVGO 348 drift.

@@ -1,0 +1,11 @@
+2026-09-17 SESSION (round ended ~10:50, market still OPEN — next round resumes later today). MARKET: tech-led V-recovery continued all morning; semis/tech strong, financials (GS/BA) weak in downtrends. No stops hit.
+POSITIONS (last seen ~10:50): MSFT 6 @497.09 | NVDA 11 @219.24 | TSLA 5 @368.57 | QCOM 7 @188.84 | AAPL 1.9 @332.53 | AMD 1 @539.91 | AVGO 1 @348.55 | Cash ~$158. Total ~$10,3xx. All well under 70% rule.
+TRADED THIS ROUND: BOUGHT 1 AVGO @ $348.32 (breakout from 5-day downtrend, strongest options cluster z=2.86, call flow 350/352.5/355). AVGO TGT $355 / STP $342.
+KEY STATE FOR NEXT ROUND:
+- AMD 1sh was at $539.91 — RIGHT AT the $540 target (was 534.88 at open, +0.9%). ACTION: if AMD >= $540, SELL 1sh to lock +4.5% from 512.50 close. If it stalls below 540 and pulls to 527-530, that's the reserve-deploy zone. Stop still $500.
+- AVGO 1sh @348.32: hold to $355, stop $342. It tagged 350.20 then faded to ~348.5-349.5 (pinning at 350 call). 
+- CASH RESERVE ~$158: deploy on PULLBACKS only — MRNA 150-152 (MRNA gapped +6.6% to ~160, 8% ABOVE Kalman fair 146.2, do NOT chase at 160) OR AMD 527-530.
+- FRI 09-18 = mega-expiry, bullish call flow confirmed: AMD 530-540, QCOM 195, AAPL 340, AVGO 350, MRNA 160. Expect pin risk at those strikes.
+HOLDING TARGETS/STOPS: QCOM 7sh tgt $194/stp $171 (was 188.84, weak morning); AAPL 1.9sh tgt $345/stp $326 (332.53, weakest); MSFT 6sh tgt $535/stp $475 (497); NVDA 11sh tgt $235/stp $198 (219.24, new highs); TSLA 5sh tgt $390/stp $338 (368.57, faded from 374).
+AVOID: GS (downtrend, -4% heavy vol 09-16), BA (downtrend, -3.7% heavy vol 09-16), UNH (rangebound). AAAU gold +2.2% low-vol, limited upside.
+DECISION TREE: (a) if broad selloff resumes (like yesterday 14:30) = DEFENSIVE, honor stops, no new buys. (b) if recovery holds = hold to targets, sell AMD at 540.

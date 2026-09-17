@@ -38,4 +38,5 @@ if __name__ == "__main__":
     dashboard.run()
     # READ memory function!
     # Improve portfolio formatting
-    # Markov chain may need to get more robuts
+    # Markov chain may need to get more robust
+    # Maybe write memory should deal with a fixed number of entries.

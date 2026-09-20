@@ -132,7 +132,17 @@ def markov_chain_regime(ticker, states):
     #     df.loc[time_gap_hours > 3.0, "log_return"] = np.nan
 
     df = df.dropna()
-    model, hidden_states = fit_hmm(df, n_states=states, n_iter=1000)
+    for state in range(42, 45):
+        try:
+            model, hidden_states = fit_hmm(
+                df, n_states=states, n_iter=1000, random_state=state
+            )
+            break
+        except ValueError as e:
+            if "positive-definite" not in str(e):
+                raise
+            continue
+
     labels = label_regimes(model)
 
     df = build_regime_filtered_signal(

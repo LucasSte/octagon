@@ -7,7 +7,6 @@ from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.portfolio import Portfolio
 from octagon.tools.registration import create_tools_list
-from octagon.tools.utilities.time_management import format_memory, read_memory_raw
 
 
 class TraderAgent:
@@ -44,12 +43,7 @@ class TraderAgent:
         self.iterations_callback = callback
 
     def agent_loop(self, should_stop):
-        start_prompt = self.initial_prompt
-        saved_memory = read_memory_raw()
-        if len(saved_memory) > 0:
-            start_prompt += f"\n\nYour memory says:\n\n {format_memory(saved_memory)}"
-
-        content = [{"type": "text", "text": start_prompt}]
+        content = [{"type": "text", "text": self.initial_prompt}]
 
         messages = [
             {

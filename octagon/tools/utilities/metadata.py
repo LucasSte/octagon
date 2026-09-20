@@ -3,7 +3,12 @@ Dictionary containing descriptions of functions for use by language models.
 These functions are designed to be used as tools by agents to provide financial analysis.
 """
 
-from octagon.tools.utilities.time_management import stop, wait, write_memory
+from octagon.tools.utilities.time_management import (
+    read_memory,
+    stop,
+    wait,
+    write_memory,
+)
 
 DESCRIPTION_LIST = [
     {
@@ -53,6 +58,18 @@ DESCRIPTION_LIST = [
     {
         "type": "function",
         "function": {
+            "name": "read_memory",
+            "description": "Read what you have previously written to memory in previous trading sessions.",
+            "parameters": {},
+            "returns": {
+                "type": "string",
+                "description": "The saved memory entries.",
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "stop",
             "description": "Stop current trading session and only continue tomorrow",
             "parameters": {
@@ -76,5 +93,6 @@ DESCRIPTION_LIST = [
 DISPATCH_DICT = {
     "wait": wait,
     "write_memory": write_memory,
+    "read_memory": read_memory,
     "stop": stop,
 }

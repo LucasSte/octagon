@@ -29,7 +29,6 @@ if __name__ == "__main__":
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()
-    # READ memory function!
-    # Maybe write memory should deal with a fixed number of entries.
+    # Maybe write memory should deal with a fixed number of entries => Test it
     # Prepare README with benchmarks
     # Decide on license

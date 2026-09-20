@@ -64,7 +64,7 @@ MacBook Pro M3 Max with 48 GB of RAM.
 The memory recorded and the portfolio state for each trading session (two to four sessions every day) are available in 
 the [benchmarks](benchmarks) folder. It contains a screenshot of the portfolio value on market close for each day.
 
-The results for are in the table below. The agent started with $10,000 on Monday.
+The results are in the table below. The agent started with $10,000 on Monday.
 
 | Date         | Portfolio value | Day change      | Accumulated gain |
 |--------------|-----------------|-----------------|------------------|

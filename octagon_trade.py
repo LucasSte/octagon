@@ -23,12 +23,9 @@ if __name__ == "__main__":
     
     Today's date is {today_date_time()}
     """
-    iterations = 15
+    iterations = 35
 
     trader_agent = TraderAgent(iterations, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()
-    # Maybe write memory should deal with a fixed number of entries => Test it
-    # Prepare README with benchmarks
-    # Decide on license

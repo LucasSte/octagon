@@ -27,6 +27,7 @@ def fit_hmm(
         covariance_type="full",  # lets each regime have its own return/vol correlation structure
         n_iter=n_iter,
         random_state=random_state,
+        min_covar=1e-5,
     )
     model.fit(X)
 

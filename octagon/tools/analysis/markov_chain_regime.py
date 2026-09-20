@@ -112,11 +112,15 @@ def markov_chain_regime(ticker, states):
 
     price = (
         yf.download(
-            ticker, period="720d", interval="1d", auto_adjust=True, progress=False
+            ticker, period="800d", interval="1d", auto_adjust=True, progress=False
         )["Close"]
         .dropna()
         .squeeze()
     )
+
+    if len(price) < 720:
+        return f"Markov chain regime isn't available for {ticker} due to insufficient data."
+
     df = pd.DataFrame({"price": price})
     df["log_return"] = np.log(df["price"]).diff()
     df["volatility"] = df["log_return"].rolling(10).std()

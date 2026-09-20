@@ -23,7 +23,7 @@ if __name__ == "__main__":
     
     Today's date is {today_date_time()}
     """
-    iterations = 35
+    iterations = 15
 
     trader_agent = TraderAgent(iterations, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)

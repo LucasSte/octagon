@@ -60,7 +60,6 @@ DESCRIPTION_LIST = [
         "function": {
             "name": "read_memory",
             "description": "Read what you have previously written to memory in previous trading sessions.",
-            "parameters": {},
             "returns": {
                 "type": "string",
                 "description": "The saved memory entries.",

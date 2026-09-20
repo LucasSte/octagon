@@ -152,10 +152,11 @@ class TestPortfolio(unittest.TestCase):
             self.assertIn("Uninvested balance: $1000.00", result)
             self.assertIn("Assets:", result)
             self.assertIn(
-                "AAPL (Apple Inc.): 100.00 <=> $200.00 <=> $-320.00 (-61.54%)", result
+                "AAPL (Apple Inc.): 100.00 <=> $200.00 <=> $-320.00 (-61.54%) <=> $2.00",
+                result,
             )
             self.assertIn(
-                "MSFT (Microsoft Corporation): 50.00 <=> $100.00 <=> $52.00 (108.33%)",
+                "MSFT (Microsoft Corporation): 50.00 <=> $100.00 <=> $52.00 (108.33%) <=> $2.00",
                 result,
             )
             self.assertIn("Legend for assets:", result)

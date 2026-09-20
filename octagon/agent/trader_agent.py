@@ -43,12 +43,13 @@ class TraderAgent:
         self.iterations_callback = callback
 
     def agent_loop(self, should_stop):
-        content = [
-            {
-                "type": "text",
-                "text": self.initial_prompt,
-            }
-        ]
+        start_prompt = self.initial_prompt
+        if os.path.exists("memory.txt"):
+            with open("memory.txt", "r") as f:
+                lines = f.readlines()
+                start_prompt += f"\n\nYour memory says:\n {lines}"
+
+        content = [{"type": "text", "text": start_prompt}]
 
         messages = [
             {

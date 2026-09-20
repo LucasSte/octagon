@@ -126,10 +126,10 @@ class Portfolio:
                 profit_or_loss_percent = (
                     profit_or_loss / possession.purchase_value
                 ) * 100
-                final_string += f"{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) \n"
+                final_string += f"{ticker} ({available_assets[ticker].name}): {possession.quantity:.2f} <=> ${total:.2f} <=> ${profit_or_loss:.2f} ({profit_or_loss_percent:.2f}%) <=> ${price:.2f} \n"
                 portfolio_value += total
 
-            final_string += "\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss"
+            final_string += "\nLegend for assets: \nTICKER (name): quantity <=> market value <=> profit or loss <=> current ticker quote"
             final_string += f"\nTotal portfolio value: ${portfolio_value:.2f}"
         else:
             final_string += "No assets in portfolio"

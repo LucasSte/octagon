@@ -1,5 +1,3 @@
-import os
-
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.tools.market_data.yahoo import today_date_time
@@ -27,16 +25,11 @@ if __name__ == "__main__":
     """
     iterations = 35
 
-    if os.path.exists("memory.txt"):
-        with open("memory.txt", "r") as f:
-            lines = f.readlines()
-            initial_prompt += f"\n\nYour memory says:\n {lines}"
-
     trader_agent = TraderAgent(iterations, initial_prompt, URL, MODEL)
     dashboard = Dashboard(trader_agent)
 
     dashboard.run()
     # READ memory function!
-    # Improve portfolio formatting
-    # Markov chain may need to get more robust
     # Maybe write memory should deal with a fixed number of entries.
+    # Prepare README with benchmarks
+    # Decide on license

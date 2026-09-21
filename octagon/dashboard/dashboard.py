@@ -119,6 +119,13 @@ class Dashboard(App):
         command_box.styles.border = ("round", "yellow")
         command_box.border_title = "Command Input"
 
+        self.main_log_update(LogType.INFO, "Welcome to Octagon!")
+        self.display_help()
+        self.main_log_update(
+            LogType.INFO,
+            "Run `load` to load a previously saved portfolio for this session.",
+        )
+
     def tool_status_update(self, message: str):
         log = self.query_one("#top_row_left", RichLog)
         line = Text(message)
@@ -205,19 +212,22 @@ class Dashboard(App):
                 self.main_log_update(LogType.INFO, "Calculating portfolio value ...")
                 self.print_portfolio()
             case "help":
-                help_message = textwrap.dedent("""
-                    Available commands:
-                    - `help`: Show available commands.
-                    - `quit`: Stop agent and exit interface.
-                    - `start`: Start trader agent.
-                    - `stop`: Stop agent.
-                    - `save`: Save portfolio state in portfolio.json.
-                    - `load`: Load portfolio from portfolio.json.
-                    - `portfolio`: Print total porfolio value with profits and losses.
-                """)
-                self.main_log_update(LogType.INFO, help_message)
+                self.display_help()
             case _:
                 self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
+
+    def display_help(self):
+        help_message = textwrap.dedent("""
+            Available commands:
+            - `help`: Show available commands.
+            - `quit`: Stop agent and exit interface.
+            - `start`: Start trader agent.
+            - `stop`: Stop agent.
+            - `save`: Save portfolio state in portfolio.json.
+            - `load`: Load portfolio from portfolio.json.
+            - `portfolio`: Print total porfolio value with profits and losses.
+        """)
+        self.main_log_update(LogType.INFO, help_message)
 
     def stop_work(self):
         if self.active_worker is not None:
@@ -235,6 +245,10 @@ class Dashboard(App):
         self.main_log_update(LogType.INFO, "Agent stopped")
         self.active_worker.cancel()
         self.active_worker = None
+        self.main_log_update(
+            LogType.INFO,
+            "Hint: run `save` if you want to persist the portfolio for the next trading session.",
+        )
 
     @work(thread=True, exclusive=False)
     def print_portfolio(self):

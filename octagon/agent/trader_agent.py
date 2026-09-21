@@ -6,6 +6,7 @@ from openai import OpenAI
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.portfolio import Portfolio
+from octagon.tools.market_data.yahoo import today_date_time
 from octagon.tools.registration import create_tools_list
 
 
@@ -43,7 +44,10 @@ class TraderAgent:
         self.iterations_callback = callback
 
     def agent_loop(self, should_stop):
-        content = [{"type": "text", "text": self.initial_prompt}]
+        start_prompt = self.initial_prompt
+        start_prompt += f"\n\n Today's date is {today_date_time()}"
+
+        content = [{"type": "text", "text": start_prompt}]
 
         messages = [
             {

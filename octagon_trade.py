@@ -1,12 +1,11 @@
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
-from octagon.tools.market_data.yahoo import today_date_time
 
 MODEL = "qwen3.8-27b"
 URL = "http://localhost:1234/v1"
 
 if __name__ == "__main__":
-    initial_prompt = f"""
+    initial_prompt = """
     You are a quantitative trader allowed to perform trades, and your goal is to increase the available balance 
     of my portfolio by actively trading the available assets and using the provided tools for information access.
     
@@ -20,8 +19,6 @@ if __name__ == "__main__":
     
     Besides monitoring the assets you've purchased, be open to new opportunities in the basket of 
     available assets, so check them during the day as well.
-    
-    Today's date is {today_date_time()}
     """
     iterations = 35
 

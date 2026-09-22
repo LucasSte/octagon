@@ -58,7 +58,7 @@ to do so is to add a new tool. Follow these steps to include new functionality:
 
 We ran the trading benchmark between September 14 and September 18, 2026, with an extra test on Monday the following 
 week. The repository state was commit
-[103c5f4](https://github.com/LucasSte/octagon/tree/103c5f42ef7177de064b066ce99ed2abb5d8c9e3). The assets available
+[96d8c6a](https://github.com/LucasSte/octagon/commit/96d8c6a985ff33052ef64c109ac51f0ed12a65e2). The assets available
 for the agent are described in [assets.py](https://github.com/LucasSte/octagon/blob/103c5f42ef7177de064b066ce99ed2abb5d8c9e3/octagon/tools/assets/available_assets.py#L10-L27). For the LLM, we used LMStudio with Qwen3.8-27b 6-bit running on a 
 MacBook Pro M3 Max with 48 GB of RAM.
 
@@ -87,17 +87,17 @@ Changes in the tooling, initial prompt and available assets will impact the agen
 configuration that outperforms the leaderboard below, submit a PR and with your changes, and update the 
 leaderboard.
 
-| User      | Date         | Day Gain | Commit                                                                                       |
-|-----------|--------------|----------|----------------------------------------------------------------------------------------------|
-| @LucasSte | September 17 | +2.10%   | [103c5f4](https://github.com/LucasSte/octagon/tree/103c5f42ef7177de064b066ce99ed2abb5d8c9e3) |
+| User      | Date         | Day Gain | Commit                                                                                         |
+|-----------|--------------|----------|------------------------------------------------------------------------------------------------|
+| @LucasSte | September 17 | +2.10%   | [96d8c6a](https://github.com/LucasSte/octagon/commit/96d8c6a985ff33052ef64c109ac51f0ed12a65e2) |
 
 ## Feature backlog
 
 There are some ideas for the future of this project. They are going to be implemented soon, but
 not necessarily in this order.
 
-* Allow the agent to access curated news about the trading stock. News, like the announcement of earnings, may 
-  influence trading decisions.
+* Allow the agent to access curated news about the trading stock. More information, like the announcement of earnings, 
+  may influence trading decisions.
 * Connect to real trading venues. One option might be connecting to blockchains, like Solana or Hyperliquid, which 
   allows the agent to trade 24/7.
 * Release this project as a library on `pip`, so that it can be integrated in third party projects. This is useful

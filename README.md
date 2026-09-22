@@ -56,7 +56,8 @@ to do so is to add a new tool. Follow these steps to include new functionality:
 
 ## Benchmarks
 
-We ran the trading benchmark between September 14 and September 18, 2026. The repository state was commit
+We ran the trading benchmark between September 14 and September 18, 2026, with an extra test on Monday the following 
+week. The repository state was commit
 [103c5f4](https://github.com/LucasSte/octagon/tree/103c5f42ef7177de064b066ce99ed2abb5d8c9e3). The assets available
 for the agent are described in [assets.py](https://github.com/LucasSte/octagon/blob/103c5f42ef7177de064b066ce99ed2abb5d8c9e3/octagon/tools/assets/available_assets.py#L10-L27). For the LLM, we used LMStudio with Qwen3.8-27b 6-bit running on a 
 MacBook Pro M3 Max with 48 GB of RAM.
@@ -64,27 +65,31 @@ MacBook Pro M3 Max with 48 GB of RAM.
 The memory recorded and the portfolio state for each trading session (two to four sessions every day) are available in 
 the [benchmarks](benchmarks) folder. It contains a screenshot of the portfolio value on market close for each day.
 
-The results are in the table below. The agent started with $10,000 on Monday.
+The results are in the table below. The agent started with $10,000 on Monday, September 14.
 
-| Date         | Portfolio value | Day change      | Accumulated gain |
-|--------------|-----------------|-----------------|------------------|
-| Start        | $10,000.00      | -               | -                |
-| September 14 | $10,068.41      | +68.41 (0.68%)  | +68.41 (0.68%)   |
-| September 15 | $10,053.53      | -14.88 (-0.14%) | +53.53 (0.53%)   |
-| September 16 | $10,029.30      | -24.23 (-0.24%) | +24.23 (0.24%)   |
-| September 17 | $10,239.95      | +210.65 (2.10%) | +239.95 (2.39%)  |
-| September 18 | $10,176.02      | -63.93 (-0.62%) | +176.02 (1.76%)  |
+| Date           | Portfolio value | Day change      | Accumulated gain |
+|----------------|-----------------|-----------------|------------------|
+| Start          | $10,000.00      | -               | -                |
+| September 14   | $10,068.41      | +68.41 (0.68%)  | +68.41 (0.68%)   |
+| September 15   | $10,053.53      | -14.88 (-0.14%) | +53.53 (0.53%)   |
+| September 16   | $10,029.30      | -24.23 (-0.24%) | +24.23 (0.24%)   |
+| September 17   | $10,239.95      | +210.65 (2.10%) | +239.95 (2.39%)  |
+| September 18   | $10,176.02      | -63.93 (-0.62%) | +176.02 (1.76%)  |
+| Weekend        | -               | -               | -                |
+| September 21 * | $10,352.49      | +176.47 (1.73%) | +352.49 (3.32%)  |
+
+Footnote: The repository state on September 21st was updated to [6e2ccef](https://github.com/LucasSte/octagon/commit/6e2ccef2550a4680b001f67257782ecd45c4d07a).
 
 
 ## Leaderboard
 
 Changes in the tooling, initial prompt and available assets will impact the agent's performance. If you've found a
-configuration of tools outperforms the leaderboard below, submit a PR and with your changes, and update the 
+configuration that outperforms the leaderboard below, submit a PR and with your changes, and update the 
 leaderboard.
 
-| User      | Dates                 | Gains  | Commit |
-|-----------|-----------------------|--------|--------|
-| @LucasSte | September 14-18, 2026 | +1.76% | [103c5f4](https://github.com/LucasSte/octagon/tree/103c5f42ef7177de064b066ce99ed2abb5d8c9e3) |
+| User      | Date         | Day Gain | Commit                                                                                       |
+|-----------|--------------|----------|----------------------------------------------------------------------------------------------|
+| @LucasSte | September 17 | +2.10%   | [103c5f4](https://github.com/LucasSte/octagon/tree/103c5f42ef7177de064b066ce99ed2abb5d8c9e3) |
 
 ## Feature backlog
 
@@ -107,4 +112,5 @@ please file an issue. Also, open an issue if you want any of these backlog items
 
 1. This project came to life as a research and side project. Returns are not guaranteed, so use it at your own risk.
 2. Although the agent uses real market data, all trades, balances and portfolio are simulated, so no money 
-   is actually spent. No deposits can be made that allows the agent to trade with real money at this time.
+   is actually spent. If someone wishes a connection to a trading venue, the easiest way is to modify the `Portfolio` 
+   class in [portfolio.py](octagon/tools/assets/portfolio.py).

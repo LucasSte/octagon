@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.available_assets import available_assets
 from octagon.tools.market_data import yahoo
+from octagon.tools.tool_definition import ToolDefinition
 
 
 @dataclass
@@ -20,7 +21,7 @@ class Possession:
     purchase_history: list[Purchase]
 
 
-class Portfolio:
+class Portfolio(ToolDefinition):
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
         self.balance = balance
         self.portfolio_map = portfolio_map
@@ -140,17 +141,6 @@ class Portfolio:
         formatted_portfolio = "PORTFOLIO: \n" + self.get_formatted_portfolio() + "\n"
         callback(LogType.INFO, formatted_portfolio)
 
-    @staticmethod
-    def build_dispatch_dict(instance: Portfolio):
-        dispatch_dict = {
-            "get_balance": instance.get_balance,
-            "buy_item": instance.buy_item,
-            "sell_item": instance.sell_item,
-            "get_formatted_portfolio": instance.get_formatted_portfolio,
-            "get_session_history": instance.get_session_history,
-        }
-        return dispatch_dict
-
     def set_interface_callback(self, callback: Callable):
         self.interface_callback = callback
 
@@ -210,3 +200,101 @@ class Portfolio:
         for item in self.session_history:
             formatted_response += f"{item}\n"
         return formatted_response
+
+    def description(self) -> list[dict]:
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_balance",
+                    "description": "Get the current uninvested balance of the portfolio",
+                    "returns": {
+                        "type": "string",
+                        "description": "Formatted string showing the uninvested balance (e.g., 'Your uninvested balance is $1500.00')",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "buy_item",
+                    "description": "Buy a specified amount of an asset",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "ticker": {
+                                "type": "string",
+                                "description": "The stock ticker symbol (e.g., AAPL, MSFT)",
+                            },
+                            "amount": {
+                                "type": "number",
+                                "description": "The quantity of the asset to buy (decimals accepted)",
+                            },
+                        },
+                        "required": ["ticker", "amount"],
+                    },
+                    "returns": {
+                        "type": "string",
+                        "description": "Confirmation message showing the purchase details and updated balance (e.g., 'Bought 10 units of AAPL at $1500.00. Your new uninvested balance is $500.00.') or error message if insufficient balance",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "sell_item",
+                    "description": "Sell a specified amount of an asset",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "ticker": {
+                                "type": "string",
+                                "description": "The stock ticker symbol (e.g., AAPL, MSFT)",
+                            },
+                            "amount": {
+                                "type": "number",
+                                "description": "The quantity of the asset to sell",
+                            },
+                        },
+                        "required": ["ticker", "amount"],
+                    },
+                    "returns": {
+                        "type": "string",
+                        "description": "Confirmation message showing the sale details and updated balance (e.g., 'Sold 5 units of AAPL at $750.00. You new uninvested balance is $2250.00.') or error message",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_formatted_portfolio",
+                    "description": "Get a formatted display of the current portfolio including assets and balance",
+                    "returns": {
+                        "type": "string",
+                        "description": "Formatted string showing portfolio balance and assets with quantities and market values, including a legend (e.g., 'Balance: $1500.00 \\n\\nAssets: \\nAAPL (Apple Inc.): 10.00 <=> $1500.00\\n...')",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_session_history",
+                    "description": "List your past ten trades",
+                    "returns": {
+                        "type": "string",
+                        "description": "A list containing your past ten trades.",
+                    },
+                },
+            },
+        ]
+
+
+    def dispatch_dictionary(self):
+        dispatch_dict = {
+            "get_balance": self.get_balance,
+            "buy_item": self.buy_item,
+            "sell_item": self.sell_item,
+            "get_formatted_portfolio": self.get_formatted_portfolio,
+            "get_session_history": self.get_session_history,
+        }
+        return dispatch_dict

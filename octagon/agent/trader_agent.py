@@ -5,13 +5,18 @@ from openai import OpenAI
 
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.dashboard.log_type import LogType
+from octagon.tools.analysis.metadata import AnalysisTools
+from octagon.tools.assets.available_assets import AssetsTool
 from octagon.tools.assets.portfolio import Portfolio
+from octagon.tools.market_data.metadata import MarketDataTools
 from octagon.tools.market_data.yahoo import today_date_time
-from octagon.tools.registration import create_tools_list
+
+from octagon.tools.tool_definition import ToolDefinition
+from octagon.tools.utilities.metadata import UtilityTools
 
 
 class TraderAgent:
-    def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str):
+    def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str, default_tools=True):
         self.rounds = rounds
         self.initial_prompt = initial_prompt
         api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
@@ -20,11 +25,25 @@ class TraderAgent:
 
         self.portfolio = Portfolio(10000, {})
 
-        self.available_tools = create_tools_list()
-        self.dispatcher = ToolDispatch(self.portfolio)
+        self.available_tools = []
+        self.dispatcher = ToolDispatch()
 
         self.log_callback: Callable | None = None
         self.iterations_callback: Callable | None = None
+
+        if default_tools:
+            self.register_default_tools()
+
+    def register_tool(self, tool: ToolDefinition):
+        self.available_tools.append(tool.description())
+        self.dispatcher.register_dispatch(tool.dispatch_dictionary())
+
+    def register_default_tools(self):
+        self.register_tool(AnalysisTools())
+        self.register_tool(AssetsTool())
+        self.register_tool(self.portfolio)
+        self.register_tool(MarketDataTools())
+        self.register_tool(UtilityTools())
 
     def set_tool_status_callback(self, callback: Callable):
         # message

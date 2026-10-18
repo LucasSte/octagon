@@ -1,8 +1,6 @@
-"""
-Dictionary containing descriptions of functions for use by language models.
-These functions are designed to be used as tools by agents to provide financial analysis.
-"""
+from typing import Callable
 
+from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.time_management import (
     read_memory,
     stop,
@@ -10,88 +8,97 @@ from octagon.tools.utilities.time_management import (
     write_memory,
 )
 
-DESCRIPTION_LIST = [
-    {
-        "type": "function",
-        "function": {
-            "name": "wait",
-            "description": "Wait a number of second to monitor the market later.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "seconds": {
-                        "type": "number",
-                        "description": "The number of seconds to wait.",
-                    }
-                },
-                "required": ["seconds"],
-            },
-            "returns": {
-                "type": "string",
-                "description": "A message confirming the waited time.",
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "write_memory",
-            "description": "Write something to permanent memory so that your future self remember "
-            "what you did in the previous run.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "content": {
-                        "type": "string",
-                        "description": "Summary of what you did in this run (e.g. profit targets). Do not summarize "
-                        "your portfolio, as it is already stored automatically in a separate file.",
-                    }
-                },
-                "required": ["content"],
-            },
-            "returns": {
-                "type": "string",
-                "description": "A message confirming the action.",
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_memory",
-            "description": "Read what you have previously written to memory in previous trading sessions.",
-            "returns": {
-                "type": "string",
-                "description": "The saved memory entries.",
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "stop",
-            "description": "Stop current trading session and only continue tomorrow",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "memory": {
-                        "type": "string",
-                        "description": "A summary of what you did in this run. Include profit targets if you have any.",
-                    }
-                },
-                "required": ["memory"],
-            },
-            "returns": {
-                "type": "string",
-                "description": "A message confirming the stop.",
-            },
-        },
-    },
-]
+class UtilityTools(ToolDefinition):
+    """
+    Utility tools to manage memory and time.
+    """
+    def __init__(self):
+        pass
 
-DISPATCH_DICT = {
-    "wait": wait,
-    "write_memory": write_memory,
-    "read_memory": read_memory,
-    "stop": stop,
-}
+    def description(self) -> list[dict]:
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "wait",
+                    "description": "Wait a number of second to monitor the market later.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "seconds": {
+                                "type": "number",
+                                "description": "The number of seconds to wait.",
+                            }
+                        },
+                        "required": ["seconds"],
+                    },
+                    "returns": {
+                        "type": "string",
+                        "description": "A message confirming the waited time.",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "write_memory",
+                    "description": "Write something to permanent memory so that your future self remember "
+                    "what you did in the previous run.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "content": {
+                                "type": "string",
+                                "description": "Summary of what you did in this run (e.g. profit targets). Do not summarize "
+                                "your portfolio, as it is already stored automatically in a separate file.",
+                            }
+                        },
+                        "required": ["content"],
+                    },
+                    "returns": {
+                        "type": "string",
+                        "description": "A message confirming the action.",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "read_memory",
+                    "description": "Read what you have previously written to memory in previous trading sessions.",
+                    "returns": {
+                        "type": "string",
+                        "description": "The saved memory entries.",
+                    },
+                },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "stop",
+                    "description": "Stop current trading session and only continue tomorrow",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "memory": {
+                                "type": "string",
+                                "description": "A summary of what you did in this run. Include profit targets if you have any.",
+                            }
+                        },
+                        "required": ["memory"],
+                    },
+                    "returns": {
+                        "type": "string",
+                        "description": "A message confirming the stop.",
+                    },
+                },
+            },
+        ]
+
+    def dispatch_dictionary(self) -> dict[str, Callable]:
+        return {
+            "wait": wait,
+            "write_memory": write_memory,
+            "read_memory": read_memory,
+            "stop": stop,
+        }

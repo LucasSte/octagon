@@ -4,16 +4,17 @@ from collections.abc import Callable
 
 from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.available_assets import available_assets
-from octagon.tools.assets.portfolio import Portfolio
-from octagon.tools.registration import create_dispatch_dictionary
 
 
 class ToolDispatch:
-    def __init__(self, portfolio: Portfolio):
-        self.dispatch_dictionary = create_dispatch_dictionary(portfolio)
+    def __init__(self):
+        self.dispatch_dictionary = {}
 
         self.log_callback: Callable | None = None
         self.tool_status_callback: Callable | None = None
+
+    def register_dispatch(self, new_dispatch: dict):
+        self.dispatch_dictionary = self.dispatch_dictionary | new_dispatch
 
     def set_log_callback(self, callback: Callable):
         self.log_callback = callback

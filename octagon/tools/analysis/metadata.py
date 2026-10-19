@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from octagon.tools.analysis.fama_french_factor import fama_french_factor
 from octagon.tools.analysis.kalman_fair_value import kalman_fair_value
@@ -12,6 +12,7 @@ class AnalysisTools(ToolDefinition):
     """
     Tools help in asset financial analysis and price prediction.
     """
+
     def __init__(self):
         pass
 

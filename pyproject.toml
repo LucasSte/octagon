@@ -16,7 +16,7 @@ dependencies = [
     "scipy==1.18.0",
     "statsmodels==0.14.6",
     "textual==8.2.8",
-    "yfinance==1.4.1",
+    "yfinance==1.7.0",
 ]
 
 [build-system]

@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 
 class ToolDefinition:
@@ -8,11 +8,9 @@ class ToolDefinition:
         according to the standardized format.
         :return:
         """
-        pass
 
     def dispatch_dictionary(self) -> dict[str, Callable]:
         """
         Return a dictionary matching the function name and its callable pointer.
         :return:
         """
-        pass

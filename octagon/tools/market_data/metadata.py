@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from octagon.tools.market_data.yahoo import *
 from octagon.tools.tool_definition import ToolDefinition
@@ -8,6 +8,7 @@ class MarketDataTools(ToolDefinition):
     """
     Tools to provide real time and historical financial data.
     """
+
     def __init__(self):
         pass
 

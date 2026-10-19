@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.time_management import (
@@ -8,10 +8,12 @@ from octagon.tools.utilities.time_management import (
     write_memory,
 )
 
+
 class UtilityTools(ToolDefinition):
     """
     Utility tools to manage memory and time.
     """
+
     def __init__(self):
         pass
 

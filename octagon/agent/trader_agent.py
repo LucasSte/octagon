@@ -10,13 +10,19 @@ from octagon.tools.assets.available_assets import AssetsTool
 from octagon.tools.assets.portfolio import Portfolio
 from octagon.tools.market_data.metadata import MarketDataTools
 from octagon.tools.market_data.yahoo import today_date_time
-
 from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.metadata import UtilityTools
 
 
 class TraderAgent:
-    def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str, default_tools=True):
+    def __init__(
+        self,
+        rounds: int,
+        initial_prompt: str,
+        llm_url: str,
+        model_name: str,
+        default_tools=True,
+    ):
         self.rounds = rounds
         self.initial_prompt = initial_prompt
         api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
@@ -28,14 +34,14 @@ class TraderAgent:
         self.available_tools = []
         self.dispatcher = ToolDispatch()
 
-        self.log_callback: Callable | None = None
-        self.iterations_callback: Callable | None = None
+        self.log_callback: Callable[[LogType, str], None] | None = None
+        self.iterations_callback: Callable[[int, int], None] | None = None
 
         if default_tools:
             self.register_default_tools()
 
     def register_tool(self, tool: ToolDefinition):
-        self.available_tools.append(tool.description())
+        self.available_tools += tool.description()
         self.dispatcher.register_dispatch(tool.dispatch_dictionary())
 
     def register_default_tools(self):
@@ -45,20 +51,20 @@ class TraderAgent:
         self.register_tool(MarketDataTools())
         self.register_tool(UtilityTools())
 
-    def set_tool_status_callback(self, callback: Callable):
+    def set_tool_status_callback(self, callback: Callable[[str], None]):
         # message
         self.dispatcher.set_tool_status_callback(callback)
 
-    def set_log_callback(self, callback: Callable):
+    def set_log_callback(self, callback: Callable[[LogType, str], None]):
         # Log type, message
         self.log_callback = callback
         self.dispatcher.set_log_callback(callback)
 
-    def set_assets_callback(self, callback: Callable):
+    def set_assets_callback(self, callback: Callable[[str, float], None]):
         # Assets, balance
         self.portfolio.set_interface_callback(callback)
 
-    def set_iterations_callback(self, callback: Callable):
+    def set_iterations_callback(self, callback: Callable[[int, int], None]):
         # Current iteration, maximum iterations
         self.iterations_callback = callback
 

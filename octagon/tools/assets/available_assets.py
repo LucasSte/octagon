@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from octagon.tools.tool_definition import ToolDefinition
 
@@ -37,24 +37,25 @@ def list_available_assets():
 
     return formatted_response
 
+
 class AssetsTool(ToolDefinition):
     def __init__(self):
         pass
 
     def description(self) -> list[dict]:
-        return [    {
-        "type": "function",
-        "function": {
-            "name": "list_available_assets",
-            "description": "List assets available to trade",
-            "returns": {
-                "type": "string",
-                "description": "Formatted string listing the assets available to trade",
-            },
-        },
-    }]
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "list_available_assets",
+                    "description": "List assets available to trade",
+                    "returns": {
+                        "type": "string",
+                        "description": "Formatted string listing the assets available to trade",
+                    },
+                },
+            }
+        ]
 
     def dispatch_dictionary(self) -> dict[str, Callable]:
-        return {
-            "list_available_assets": list_available_assets
-        }
+        return {"list_available_assets": list_available_assets}

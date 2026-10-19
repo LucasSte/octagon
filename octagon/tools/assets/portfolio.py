@@ -25,7 +25,7 @@ class Portfolio(ToolDefinition):
     def __init__(self, balance: float, portfolio_map: dict[str, Possession]):
         self.balance = balance
         self.portfolio_map = portfolio_map
-        self.interface_callback: Callable | None = None
+        self.interface_callback: Callable[[str, float]] | None = None
         self.session_history = []
 
     def get_balance(self):
@@ -141,7 +141,7 @@ class Portfolio(ToolDefinition):
         formatted_portfolio = "PORTFOLIO: \n" + self.get_formatted_portfolio() + "\n"
         callback(LogType.INFO, formatted_portfolio)
 
-    def set_interface_callback(self, callback: Callable):
+    def set_interface_callback(self, callback: Callable[[str, float]]):
         self.interface_callback = callback
 
     def update_interface(self):
@@ -287,7 +287,6 @@ class Portfolio(ToolDefinition):
                 },
             },
         ]
-
 
     def dispatch_dictionary(self):
         dispatch_dict = {

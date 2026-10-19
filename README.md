@@ -44,15 +44,14 @@ available commands.
 Trading strategies may vary between people. If you want to customize trading decisions and data sources, the best way 
 to do so is to add a new tool. Follow these steps to include new functionality:
 
-1. If your new tool does not fit in any of the available categories (analysis, assets, market data and utilities under
-   `octagon/tools`), create a new Python module in `octagon/tools`.
-2. Implement your new functionality.
-3. Create the tool description and the dispatch dictionary in `metadata.py`. See the example in 
-   [market_data/metadata.py](octagon/tools/market_data/metadata.py).
-4. Register your tool in [registration.py](octagon/tools/registration.py).
-5. If your functionality requires a state to be stored between calls, implement a class and create the dispatch 
-   dictionary with an active instance of it. See the usages of `Portfolio.build_dispatch_dict` 
-   declared in [portfolio.py](octagon/tools/assets/portfolio.py) as guidance.
+1. If your new tool does is not one of the default ones (see `register_defaut_tools`
+   in [trader_agent.py](octagon/agent/trader_agent.py)), derive the `ToolDefinition` (see 
+   [tool_definition.py](octagon/tools/tool_definition.py)) class with your new functionality.
+2. Register your tool by doing `octangon_agent.register_tool(MyAwesmomeTool())`.
+3. If your tool requires a state to be stored between calls, add it to the derived `ToolDefinition` class and register
+   on the agent an active instance of it: `octagon_agent.register_tool(instace_of_tool)`.
+4. Make sure to follow the correct formats for the tool description and dispatch dictionary. See 
+   [metadata.py](octagon/tools/analysis/metadata.py) for an example.
 
 ## Benchmarks
 
@@ -80,6 +79,18 @@ The results are in the table below. The agent started with $10,000 on Monday, Se
 
 Footnote: The repository state on September 21st was updated to [6e2ccef](https://github.com/LucasSte/octagon/commit/6e2ccef2550a4680b001f67257782ecd45c4d07a).
 
+To make sense of these numbers, the table below shows a comparison for the accumulated gain between the S&P 500 IVV 
+ETF and Octagon.
+
+| Date           | IVV Accumulated gain | Octagon accumulated gain |
+|----------------|----------------------|--------------------------|
+| September 14   | -                    | -                        |
+| September 15   | -0.7%                | +0.53%                   |
+| September 16   | -1.17%               | +0.24%                   |
+| September 17   | -0.05%               | +2.39%                   |
+| September 18   | +0.05%               | +1.76%                   |
+| Weekend        | -                    | -                        |
+| September 21 * | +1.61%               | +3.32%                   |
 
 ## Leaderboard
 
@@ -100,8 +111,6 @@ not necessarily in this order.
   may influence trading decisions.
 * Connect to real trading venues. One option might be connecting to blockchains, like Solana or Hyperliquid, which 
   allows the agent to trade 24/7.
-* Release this project as a library on `pip`, so that it can be integrated in third party projects. This is useful
-  if someone wants to create special trading strategies without needing to clone or fork this repository.
 * Ability to talk to the agent in the terminal interface.
 * Simulate trading with historical data.
 

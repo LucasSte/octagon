@@ -21,7 +21,7 @@ class TraderAgent:
         initial_prompt: str,
         llm_url: str,
         model_name: str,
-        default_tools=True,
+        default_tools,
     ):
         self.rounds = rounds
         self.initial_prompt = initial_prompt

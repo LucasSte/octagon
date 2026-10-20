@@ -42,7 +42,7 @@ available commands.
 ### Adding new tools
 
 Trading strategies may vary between people. If you want to customize trading decisions and data sources, the best way 
-to do so is to add a new tool. Follow these steps to include new functionality:
+to do so is to add a new tool. Follow these steps to include new functionality and see the example below:
 
 1. If your new tool does is not one of the default ones (see `register_defaut_tools`
    in [trader_agent.py](octagon/agent/trader_agent.py)), derive the `ToolDefinition` (see 
@@ -52,6 +52,48 @@ to do so is to add a new tool. Follow these steps to include new functionality:
    on the agent an active instance of it: `octagon_agent.register_tool(instace_of_tool)`.
 4. Make sure to follow the correct formats for the tool description and dispatch dictionary. See 
    [metadata.py](octagon/tools/analysis/metadata.py) for an example.
+
+```Python
+from octagon.tools.tool_definition import ToolDefinition
+from octagon.octagon_agent import OctagonAgent
+from typing import Callable
+
+
+class MyNewTool(ToolDefinition):
+    def description(self) -> list[dict]:
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": "my_new_tool",
+                    "description": "Invoke my new tool",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "arg": {
+                                "type": "string",
+                                "description": "An argument",
+                            }
+                        },
+                        "required": ["arg"],
+                    },
+                },
+            }
+        ]
+
+    def dispatch_dictionary(self) -> dict[str, Callable]:
+        return {"my_new_tool": self.invoke_this_tool}
+
+    def invoke_this_tool(self, arg):
+        # Your implementation
+        pass
+
+
+octagon_agent = OctagonAgent(35, "my prompt", "https://localhost:1234", "Qwen")
+new_tool = MyNewTool()
+octagon_agent.register_tool(new_tool)
+octagon_agent.run_with_dashboard()
+```
 
 ## Benchmarks
 

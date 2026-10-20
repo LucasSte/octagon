@@ -1,5 +1,4 @@
-from octagon.agent.trader_agent import TraderAgent
-from octagon.dashboard.dashboard import Dashboard
+from octagon.octagon_agent import OctagonAgent
 
 MODEL = "qwen3.8-27b"
 URL = "http://localhost:1234/v1"
@@ -22,7 +21,5 @@ if __name__ == "__main__":
     """
     iterations = 35
 
-    trader_agent = TraderAgent(iterations, initial_prompt, URL, MODEL)
-    dashboard = Dashboard(trader_agent)
-
-    dashboard.run()
+    trader_agent = OctagonAgent(iterations, initial_prompt, URL, MODEL)
+    trader_agent.run_with_dashboard()

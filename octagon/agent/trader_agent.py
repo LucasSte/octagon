@@ -5,13 +5,24 @@ from openai import OpenAI
 
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.dashboard.log_type import LogType
+from octagon.tools.analysis.metadata import AnalysisTools
+from octagon.tools.assets.available_assets import AssetsTool
 from octagon.tools.assets.portfolio import Portfolio
+from octagon.tools.market_data.metadata import MarketDataTools
 from octagon.tools.market_data.yahoo import today_date_time
-from octagon.tools.registration import create_tools_list
+from octagon.tools.tool_definition import ToolDefinition
+from octagon.tools.utilities.metadata import UtilityTools
 
 
 class TraderAgent:
-    def __init__(self, rounds: int, initial_prompt: str, llm_url: str, model_name: str):
+    def __init__(
+        self,
+        rounds: int,
+        initial_prompt: str,
+        llm_url: str,
+        model_name: str,
+        default_tools,
+    ):
         self.rounds = rounds
         self.initial_prompt = initial_prompt
         api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
@@ -20,26 +31,40 @@ class TraderAgent:
 
         self.portfolio = Portfolio(10000, {})
 
-        self.available_tools = create_tools_list()
-        self.dispatcher = ToolDispatch(self.portfolio)
+        self.available_tools = []
+        self.dispatcher = ToolDispatch()
 
-        self.log_callback: Callable | None = None
-        self.iterations_callback: Callable | None = None
+        self.log_callback: Callable[[LogType, str], None] | None = None
+        self.iterations_callback: Callable[[int, int], None] | None = None
 
-    def set_tool_status_callback(self, callback: Callable):
+        if default_tools:
+            self.register_default_tools()
+
+    def register_tool(self, tool: ToolDefinition):
+        self.available_tools += tool.description()
+        self.dispatcher.register_dispatch(tool.dispatch_dictionary())
+
+    def register_default_tools(self):
+        self.register_tool(AnalysisTools())
+        self.register_tool(AssetsTool())
+        self.register_tool(self.portfolio)
+        self.register_tool(MarketDataTools())
+        self.register_tool(UtilityTools())
+
+    def set_tool_status_callback(self, callback: Callable[[str], None]):
         # message
         self.dispatcher.set_tool_status_callback(callback)
 
-    def set_log_callback(self, callback: Callable):
+    def set_log_callback(self, callback: Callable[[LogType, str], None]):
         # Log type, message
         self.log_callback = callback
         self.dispatcher.set_log_callback(callback)
 
-    def set_assets_callback(self, callback: Callable):
+    def set_assets_callback(self, callback: Callable[[str, float], None]):
         # Assets, balance
         self.portfolio.set_interface_callback(callback)
 
-    def set_iterations_callback(self, callback: Callable):
+    def set_iterations_callback(self, callback: Callable[[int, int], None]):
         # Current iteration, maximum iterations
         self.iterations_callback = callback
 

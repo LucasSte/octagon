@@ -4,21 +4,22 @@ from collections.abc import Callable
 
 from octagon.dashboard.log_type import LogType
 from octagon.tools.assets.available_assets import available_assets
-from octagon.tools.assets.portfolio import Portfolio
-from octagon.tools.registration import create_dispatch_dictionary
 
 
 class ToolDispatch:
-    def __init__(self, portfolio: Portfolio):
-        self.dispatch_dictionary = create_dispatch_dictionary(portfolio)
+    def __init__(self):
+        self.dispatch_dictionary = {}
 
-        self.log_callback: Callable | None = None
-        self.tool_status_callback: Callable | None = None
+        self.log_callback: Callable[[LogType, str], None] | None = None
+        self.tool_status_callback: Callable[[str], None] | None = None
 
-    def set_log_callback(self, callback: Callable):
+    def register_dispatch(self, new_dispatch: dict):
+        self.dispatch_dictionary = self.dispatch_dictionary | new_dispatch
+
+    def set_log_callback(self, callback: Callable[[LogType, str], None]):
         self.log_callback = callback
 
-    def set_tool_status_callback(self, callback: Callable):
+    def set_tool_status_callback(self, callback: Callable[[str], None]):
         self.tool_status_callback = callback
 
     def dispatch_function(self, response_message, message_list) -> tuple[bool, bool]:

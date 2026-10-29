@@ -37,6 +37,7 @@ class TraderAgent:
         self.log_callback: Callable[[LogType, str], None] | None = None
         self.iterations_callback: Callable[[int, int], None] | None = None
 
+        self.history = []
         if default_tools:
             self.register_default_tools()
 
@@ -68,18 +69,84 @@ class TraderAgent:
         # Current iteration, maximum iterations
         self.iterations_callback = callback
 
+    def talk_to_agent(self, message: str):
+        content = [{"type": "text", "text": message}]
+        self.history.append(
+            {
+                "role": "user",
+                "content": content,
+            }
+        )
+        try:
+            chat_response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=self.history,
+                tools=self.available_tools,
+                max_tokens=8196,
+                temperature=0.7,
+                top_p=0.95,
+                extra_body={
+                    "top_k": 20,
+                },
+            )
+        # ruff: noqa: BLE001
+        except Exception as e:
+            if self.log_callback is not None:
+                self.log_callback(LogType.ERROR, str(e))
+            return
+        response_message = chat_response.choices[0].message
+        self.log_model_returns(response_message)
+
+    def clear_history(self):
+        self.history = []
+
+    def log_model_returns(self, response_message):
+        if self.log_callback is not None:
+            if (
+                response_message.content is not None
+                and len(response_message.content) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
+
+            if (
+                response_message.refusal is not None
+                and len(response_message.refusal) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
+
+            if (
+                hasattr(response_message, "reasoning_content")
+                and len(response_message.reasoning_content) > 0
+            ):
+                self.log_callback(
+                    LogType.AGENT_REASONING, response_message.reasoning_content
+                )
+
+            if (
+                hasattr(response_message, "reasoning")
+                and len(response_message.reasoning) > 0
+            ):
+                self.log_callback(LogType.AGENT_REASONING, response_message.reasoning)
+
+        _, has_stop = self.dispatcher.dispatch_function(response_message, self.history)
+
+        if has_stop:
+            self.log_callback(LogType.INFO, "Stop requested by agent.")
+
     def agent_loop(self, should_stop):
         start_prompt = self.initial_prompt
         start_prompt += f"\n\n Today's date is {today_date_time()}"
 
         content = [{"type": "text", "text": start_prompt}]
 
-        messages = [
-            {
-                "role": "user",
-                "content": content,
-            }
-        ]
+        self.history.append(
+            [
+                {
+                    "role": "user",
+                    "content": content,
+                }
+            ]
+        )
 
         for i in range(self.rounds + 1):
             if self.iterations_callback is not None and i < self.rounds:
@@ -94,7 +161,7 @@ class TraderAgent:
                         "for the next round.",
                     }
                 ]
-                messages.append(
+                self.history.append(
                     {
                         "role": "user",
                         "content": new_content,
@@ -107,7 +174,7 @@ class TraderAgent:
             try:
                 chat_response = self.client.chat.completions.create(
                     model=self.model_name,
-                    messages=messages,
+                    messages=self.history,
                     tools=self.available_tools,
                     max_tokens=8196,
                     temperature=0.7,
@@ -126,37 +193,10 @@ class TraderAgent:
             if should_stop():
                 break
 
-            if self.log_callback is not None:
-                if (
-                    response_message.content is not None
-                    and len(response_message.content) > 0
-                ):
-                    self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
-
-                if (
-                    response_message.refusal is not None
-                    and len(response_message.refusal) > 0
-                ):
-                    self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
-
-                if (
-                    hasattr(response_message, "reasoning_content")
-                    and len(response_message.reasoning_content) > 0
-                ):
-                    self.log_callback(
-                        LogType.AGENT_REASONING, response_message.reasoning_content
-                    )
-
-                if (
-                    hasattr(response_message, "reasoning")
-                    and len(response_message.reasoning) > 0
-                ):
-                    self.log_callback(
-                        LogType.AGENT_REASONING, response_message.reasoning
-                    )
+            self.log_model_returns(response_message)
 
             executed_action, has_stop = self.dispatcher.dispatch_function(
-                response_message, messages
+                response_message, self.history
             )
             if not executed_action and self.log_callback is not None:
                 self.log_callback(

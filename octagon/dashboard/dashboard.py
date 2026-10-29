@@ -1,4 +1,6 @@
 import textwrap
+import threading
+from enum import Enum
 
 from rich.panel import Panel
 from rich.text import Text
@@ -10,6 +12,11 @@ from textual.worker import get_current_worker
 
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.log_type import LogType
+
+
+class AgentState(Enum):
+    TALKING = 1
+    WORKING = 2
 
 
 class Dashboard(App):
@@ -29,6 +36,8 @@ class Dashboard(App):
         self.agent.set_log_callback(self.main_log_update)
         self.agent.set_assets_callback(self.update_assets)
         self.agent.set_iterations_callback(self.update_iterations)
+        self.state = AgentState.WORKING
+        self.agent_lock = threading.Lock()
 
     def compose(self) -> ComposeResult:
         with Vertical(id="root"):
@@ -173,18 +182,40 @@ class Dashboard(App):
             )
         )
 
+    def talk_to_agent(self, message):
+        if message == "talk-off":
+            self.state = AgentState.WORKING
+
+        self.agent_lock.acquire(blocking=True)
+        # TODO: This should be in another thread, and synced accordingly
+        self.agent.talk_to_agent(message)
+        self.agent_lock.release()
+
     def on_input_submitted(self, event: Input.Submitted) -> None:
         command = event.value.strip().lower()
         event.input.value = ""
 
+        if self.state == AgentState.TALKING:
+            self.talk_to_agent(command)
+            return
+
         match command:
             case "quit":
+                if self.agent_lock.locked():
+                    self.main_log_update(
+                        LogType.ERROR, "Can't quit. Waiting for agent to stop."
+                    )
+                    return
                 self.stop_work()
                 self.exit()
             case "start":
-                self.main_log_update(LogType.INFO, "Starting agent")
-                self.agent.portfolio.update_interface()
-                self.active_worker = self.run_agent()
+                if self.active_worker is not None and not self.agent_lock.locked():
+                    self.main_log_update(LogType.INFO, "Starting agent")
+                    self.agent.clear_history()
+                    self.agent.portfolio.update_interface()
+                    self.active_worker = self.run_agent()
+                else:
+                    self.main_log_update(LogType.ERROR, "Agent is already running")
             case "stop":
                 self.stop_work()
             case "save":
@@ -213,6 +244,21 @@ class Dashboard(App):
                 self.print_portfolio()
             case "help":
                 self.display_help()
+            case "talk-on":
+                self.main_log_update(
+                    LogType.INFO,
+                    "Talking mode enable. You can talk to the agent after "
+                    "as soon as it stops.",
+                )
+                self.stop_work()
+                self.state = AgentState.TALKING
+            case "restart":
+                if self.active_worker is not None and not self.agent_lock.locked():
+                    self.main_log_update(LogType.INFO, "Restarting agent")
+                    self.agent.portfolio.update_interface()
+                    self.active_worker = self.run_agent()
+                else:
+                    self.main_log_update(LogType.ERROR, "Agent is already running")
             case _:
                 self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
 
@@ -221,11 +267,14 @@ class Dashboard(App):
             Available commands:
             - `help`: Show available commands.
             - `quit`: Stop agent and exit interface.
-            - `start`: Start trader agent.
+            - `start`: Clear context and start trader agent.
+            - `restart`: Start agent with existing context.
             - `stop`: Stop agent.
             - `save`: Save portfolio state in portfolio.json.
             - `load`: Load portfolio from portfolio.json.
             - `portfolio`: Print total porfolio value with profits and losses.
+            - `talk-on`: Enable talking mode.
+            - `talk-off`: Disable talking mode.
         """)
         self.main_log_update(LogType.INFO, help_message)
 
@@ -241,6 +290,7 @@ class Dashboard(App):
     @work(thread=True, exclusive=False, exit_on_error=True)
     def run_agent(self):
         worker = get_current_worker()
+        self.agent_lock.acquire(blocking=True)
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
         self.main_log_update(LogType.INFO, "Agent stopped")
         self.active_worker.cancel()
@@ -249,6 +299,7 @@ class Dashboard(App):
             LogType.INFO,
             "Hint: run `save` if you want to persist the portfolio for the next trading session.",
         )
+        self.agent_lock.release()
 
     @work(thread=True, exclusive=False)
     def print_portfolio(self):

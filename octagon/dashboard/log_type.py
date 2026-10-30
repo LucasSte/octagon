@@ -7,3 +7,4 @@ class LogType(Enum):
     ERROR = 3
     AGENT_MESSAGE = 4
     AGENT_REASONING = 5
+    USER_MESSAGE = 6

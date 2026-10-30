@@ -100,20 +100,36 @@ class TraderAgent:
     def clear_history(self):
         self.history = []
 
+    def start_interaction(self):
+        self.history.append(
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "You are now in user interaction mode. Interrupt what you were "
+                        "doing and answer user questions first.",
+                    }
+                ],
+            }
+        )
+
+    def end_interaction(self):
+        self.history.append(
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "User interaction finished. "
+                        "DO NOT ask any more questions while you continue to trade.",
+                    }
+                ],
+            }
+        )
+
     def log_model_returns(self, response_message):
         if self.log_callback is not None:
-            if (
-                response_message.content is not None
-                and len(response_message.content) > 0
-            ):
-                self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
-
-            if (
-                response_message.refusal is not None
-                and len(response_message.refusal) > 0
-            ):
-                self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
-
             if (
                 hasattr(response_message, "reasoning_content")
                 and len(response_message.reasoning_content) > 0
@@ -128,6 +144,18 @@ class TraderAgent:
             ):
                 self.log_callback(LogType.AGENT_REASONING, response_message.reasoning)
 
+            if (
+                response_message.content is not None
+                and len(response_message.content) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
+
+            if (
+                response_message.refusal is not None
+                and len(response_message.refusal) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
+
         _, has_stop = self.dispatcher.dispatch_function(response_message, self.history)
 
         if has_stop:
@@ -140,12 +168,10 @@ class TraderAgent:
         content = [{"type": "text", "text": start_prompt}]
 
         self.history.append(
-            [
-                {
-                    "role": "user",
-                    "content": content,
-                }
-            ]
+            {
+                "role": "user",
+                "content": content,
+            }
         )
 
         for i in range(self.rounds + 1):

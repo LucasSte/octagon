@@ -61,7 +61,7 @@ class Dashboard(App):
                         )
 
                     yield RichLog(
-                        max_lines=25,
+                        max_lines=55,
                         auto_scroll=True,
                         wrap=True,
                         id="bottom_left",
@@ -190,6 +190,10 @@ class Dashboard(App):
     def talk_to_agent(self, message):
         if message == "talk-off":
             self.agent.end_interaction()
+            self.main_log_update(
+                LogType.INFO,
+                "Talking mode disabled.",
+            )
             self.state = AgentState.WORKING
             self.working_input_box()
             return
@@ -214,6 +218,7 @@ class Dashboard(App):
         event.input.value = ""
 
         # TODO: Should talking mode allow tools?
+        # Yes, but to execute an action you may need multiple turns.
         match command:
             case "quit":
                 if self.agent_lock.locked():
@@ -269,7 +274,7 @@ class Dashboard(App):
                 else:
                     self.main_log_update(
                         LogType.INFO,
-                        "Talking mode enable. You can talk to the agent after "
+                        "Talking mode enabled. You can talk to the agent after "
                         "as soon as it stops.",
                     )
                     command_box = self.query_one("#command", Input)

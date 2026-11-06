@@ -1,6 +1,6 @@
 from octagon.octagon_agent import OctagonAgent
 
-MODEL = "qwen3.8-27b"
+MODEL = "prism-ml/bonsai-27b"
 URL = "http://localhost:1234/v1"
 
 if __name__ == "__main__":

@@ -217,8 +217,8 @@ class Dashboard(App):
         command = event.value.strip().lower()
         event.input.value = ""
 
-        # TODO: Should talking mode allow tools?
-        # Yes, but to execute an action you may need multiple turns.
+        # TODO: This strategy didn't work. Instead, talk to user using a function.
+        # If this does not work, then give up.
         match command:
             case "quit":
                 if self.agent_lock.locked():
@@ -332,10 +332,11 @@ class Dashboard(App):
         if self.active_worker is not None:
             self.active_worker.cancel()
             self.active_worker = None
-        self.main_log_update(
-            LogType.INFO,
-            "Hint: run `save` if you want to persist the portfolio for the next trading session.",
-        )
+        if self.state == AgentState.WORKING:
+            self.main_log_update(
+                LogType.INFO,
+                "Hint: run `save` if you want to persist the portfolio for the next trading session.",
+            )
         self.agent_lock.release()
 
     @work(thread=True, exclusive=False)

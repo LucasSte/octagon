@@ -76,7 +76,10 @@ class ToolDispatch:
                     **parameters
                 )
 
-                if tool_call.function.name == "stop":
+                if (
+                    tool_call.function.name == "stop"
+                    or tool_call.function.name == "return_control"
+                ):
                     has_stop = True
 
                 if self.tool_status_callback is not None:

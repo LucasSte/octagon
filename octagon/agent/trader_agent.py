@@ -12,6 +12,7 @@ from octagon.tools.market_data.metadata import MarketDataTools
 from octagon.tools.market_data.yahoo import today_date_time
 from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.metadata import UtilityTools
+from octagon.tools.utilities.user_interaction import UserInteractionTools
 
 
 class TraderAgent:
@@ -77,25 +78,40 @@ class TraderAgent:
                 "content": content,
             }
         )
-        try:
-            chat_response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=self.history,
-                tools=self.available_tools,
-                max_tokens=8196,
-                temperature=0.7,
-                top_p=0.95,
-                extra_body={
-                    "top_k": 20,
-                },
+
+        user_interaction_tool = UserInteractionTools()
+        if "return_control" not in self.dispatcher.dispatch_dictionary:
+            self.dispatcher.register_dispatch(
+                user_interaction_tool.dispatch_dictionary()
             )
-        # ruff: noqa: BLE001
-        except Exception as e:
-            if self.log_callback is not None:
-                self.log_callback(LogType.ERROR, str(e))
-            return
-        response_message = chat_response.choices[0].message
-        self.log_model_returns(response_message)
+
+        for _ in range(5):
+            try:
+                chat_response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=self.history,
+                    tools=self.available_tools + user_interaction_tool.description(),
+                    max_tokens=8196,
+                    temperature=0.7,
+                    top_p=0.95,
+                    extra_body={
+                        "top_k": 20,
+                    },
+                )
+            # ruff: noqa: BLE001
+            except Exception as e:
+                if self.log_callback is not None:
+                    self.log_callback(LogType.ERROR, str(e))
+                return
+            response_message = chat_response.choices[0].message
+            self.log_model_returns(response_message)
+
+            _, has_stop = self.dispatcher.dispatch_function(
+                response_message,
+                self.history,
+            )
+            if has_stop:
+                break
 
     def clear_history(self):
         self.history = []

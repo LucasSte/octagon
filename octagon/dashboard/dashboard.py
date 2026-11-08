@@ -160,7 +160,7 @@ class Dashboard(App):
                 line.append("USER: ", style="blue")
             case LogType.AGENT_REPLY:
                 line.append("AGENT RESPONSE: ", style="green")
-        line.append(message)
+        line.append(message.rstrip())
 
         log = self.query_one("#bottom_left", RichLog)
         log.write(line)
@@ -211,11 +211,14 @@ class Dashboard(App):
         self.agent_lock.release()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        command = event.value.strip().lower()
+        command = event.value.strip()
         event.input.value = ""
 
-        # TODO: This strategy didn't work. Instead, talk to user using a function.
-        # If this does not work, then give up.
+        # TODO: Should I restart automatically after seding the message? I guess so
+        # Improve the user experience around the talking-mode: Agent must be running.
+        # Restart after message sent.
+        # Inform what is happening (agent will reply with the tag)
+        # Tool call box overflows (trim it).
         match command:
             case "quit":
                 if self.agent_lock.locked():

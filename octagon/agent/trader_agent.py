@@ -41,7 +41,7 @@ class TraderAgent:
 
         self.history = []
         self.use_default_tools = default_tools
-        if self.default_tools:
+        if self.use_default_tools:
             self.register_default_tools()
 
     def register_tool(self, tool: ToolDefinition):

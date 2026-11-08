@@ -8,8 +8,8 @@ class UserInteractionTools(ToolDefinition):
     def __init__(self, log_callback: Callable[[LogType, str], None]) -> None:
         self.log_callback = log_callback
 
-    def reply_to_user(self, message: str) -> str:
-        self.log_callback(LogType.AGENT_REPLY, message)
+    def reply_to_user(self, text: str) -> str:
+        self.log_callback(LogType.AGENT_REPLY, text)
         return "Reponse displayed to user."
 
     def description(self) -> list[dict]:

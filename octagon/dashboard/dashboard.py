@@ -158,6 +158,8 @@ class Dashboard(App):
                 line.append("REASONING: ", style="purple")
             case LogType.USER_MESSAGE:
                 line.append("USER: ", style="blue")
+            case LogType.AGENT_REPLY:
+                line.append("AGENT RESPONSE: ", style="green")
         line.append(message)
 
         log = self.query_one("#bottom_left", RichLog)
@@ -189,13 +191,14 @@ class Dashboard(App):
 
     def talk_to_agent(self, message):
         if message == "talk-off":
-            self.agent.end_interaction()
             self.main_log_update(
                 LogType.INFO,
                 "Talking mode disabled.",
             )
             self.state = AgentState.WORKING
             self.working_input_box()
+            if self.active_worker is None and not self.agent_lock.locked():
+                self.restart_agent()
             return
 
         if self.agent_lock.locked():
@@ -203,15 +206,9 @@ class Dashboard(App):
             return
 
         self.main_log_update(LogType.USER_MESSAGE, message)
-        self.active_worker = self.async_talk(message)
-
-    @work(thread=True, exclusive=False, exit_on_error=True)
-    def async_talk(self, message):
         self.agent_lock.acquire(blocking=True)
         self.agent.talk_to_agent(message)
         self.agent_lock.release()
-        self.active_worker.cancel()
-        self.active_worker = None
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         command = event.value.strip().lower()
@@ -287,9 +284,7 @@ class Dashboard(App):
                 if self.state == AgentState.TALKING:
                     self.main_log_update(LogType.ERROR, "Agent is in talking state.")
                 elif self.active_worker is None and not self.agent_lock.locked():
-                    self.main_log_update(LogType.INFO, "Restarting agent")
-                    self.agent.portfolio.update_interface()
-                    self.active_worker = self.run_agent()
+                    self.restart_agent()
                 else:
                     self.main_log_update(LogType.ERROR, "Agent is already running")
             case _:
@@ -297,6 +292,11 @@ class Dashboard(App):
                     self.talk_to_agent(command)
                 else:
                     self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
+
+    def restart_agent(self):
+        self.main_log_update(LogType.INFO, "Restarting agent")
+        self.agent.portfolio.update_interface()
+        self.active_worker = self.run_agent()
 
     def display_help(self):
         help_message = textwrap.dedent("""

@@ -24,6 +24,7 @@ class TraderAgent:
         model_name: str,
         default_tools,
     ):
+        self.initial_rounds = rounds
         self.rounds = rounds
         self.initial_prompt = initial_prompt
         api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
@@ -39,7 +40,8 @@ class TraderAgent:
         self.iterations_callback: Callable[[int, int], None] | None = None
 
         self.history = []
-        if default_tools:
+        self.use_default_tools = default_tools
+        if self.default_tools:
             self.register_default_tools()
 
     def register_tool(self, tool: ToolDefinition):
@@ -61,6 +63,9 @@ class TraderAgent:
         # Log type, message
         self.log_callback = callback
         self.dispatcher.set_log_callback(callback)
+        if self.use_default_tools:
+            user_interaction = UserInteractionTools(callback)
+            self.register_tool(user_interaction)
 
     def set_assets_callback(self, callback: Callable[[str, float], None]):
         # Assets, balance
@@ -71,7 +76,12 @@ class TraderAgent:
         self.iterations_callback = callback
 
     def talk_to_agent(self, message: str):
-        content = [{"type": "text", "text": message}]
+        content = [
+            {
+                "type": "text",
+                "text": f"{message}\n Respond to this using the 'reply_to_user' function if available.",
+            }
+        ]
         self.history.append(
             {
                 "role": "user",
@@ -79,70 +89,9 @@ class TraderAgent:
             }
         )
 
-        user_interaction_tool = UserInteractionTools()
-        if "return_control" not in self.dispatcher.dispatch_dictionary:
-            self.dispatcher.register_dispatch(
-                user_interaction_tool.dispatch_dictionary()
-            )
-
-        for _ in range(5):
-            try:
-                chat_response = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=self.history,
-                    tools=self.available_tools + user_interaction_tool.description(),
-                    max_tokens=8196,
-                    temperature=0.7,
-                    top_p=0.95,
-                    extra_body={
-                        "top_k": 20,
-                    },
-                )
-            # ruff: noqa: BLE001
-            except Exception as e:
-                if self.log_callback is not None:
-                    self.log_callback(LogType.ERROR, str(e))
-                return
-            response_message = chat_response.choices[0].message
-            self.log_model_returns(response_message)
-
-            _, has_stop = self.dispatcher.dispatch_function(
-                response_message,
-                self.history,
-            )
-            if has_stop:
-                break
-
     def clear_history(self):
+        self.rounds = self.initial_rounds
         self.history = []
-
-    def start_interaction(self):
-        self.history.append(
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "You are now in user interaction mode. Interrupt what you were "
-                        "doing and answer user questions first.",
-                    }
-                ],
-            }
-        )
-
-    def end_interaction(self):
-        self.history.append(
-            {
-                "role": "system",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "User interaction finished. "
-                        "DO NOT ask any more questions while you continue to trade.",
-                    }
-                ],
-            }
-        )
 
     def log_model_returns(self, response_message):
         if self.log_callback is not None:
@@ -171,11 +120,6 @@ class TraderAgent:
                 and len(response_message.refusal) > 0
             ):
                 self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
-
-        _, has_stop = self.dispatcher.dispatch_function(response_message, self.history)
-
-        if has_stop:
-            self.log_callback(LogType.INFO, "Stop requested by agent.")
 
     def agent_loop(self, should_stop):
         start_prompt = self.initial_prompt
@@ -211,6 +155,7 @@ class TraderAgent:
                 )
 
             if should_stop():
+                self.rounds = self.initial_rounds - i - 1
                 break
 
             try:
@@ -233,6 +178,7 @@ class TraderAgent:
             response_message = chat_response.choices[0].message
 
             if should_stop():
+                self.rounds = self.initial_rounds - i - 1
                 break
 
             self.log_model_returns(response_message)
@@ -247,5 +193,6 @@ class TraderAgent:
                 break
 
             if has_stop:
-                self.log_callback(LogType.INFO, "Stop requested by agent.")
+                if self.log_callback is not None:
+                    self.log_callback(LogType.INFO, "Stop requested by agent.")
                 break

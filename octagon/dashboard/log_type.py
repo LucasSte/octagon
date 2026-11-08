@@ -8,3 +8,4 @@ class LogType(Enum):
     AGENT_MESSAGE = 4
     AGENT_REASONING = 5
     USER_MESSAGE = 6
+    AGENT_REPLY = 7

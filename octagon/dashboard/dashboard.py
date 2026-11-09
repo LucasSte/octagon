@@ -141,6 +141,7 @@ class Dashboard(App):
     def tool_status_update(self, message: str):
         log = self.query_one("#top_row_left", RichLog)
         line = Text(message)
+        line = (line[:100] + "...") if len(line) > 100 else line
         log.write(line)
 
     def main_log_update(self, log_type: LogType, message: str):
@@ -190,17 +191,6 @@ class Dashboard(App):
         )
 
     def talk_to_agent(self, message):
-        if message == "talk-off":
-            self.main_log_update(
-                LogType.INFO,
-                "Talking mode disabled.",
-            )
-            self.state = AgentState.WORKING
-            self.working_input_box()
-            if self.active_worker is None and not self.agent_lock.locked():
-                self.restart_agent()
-            return
-
         if self.agent_lock.locked():
             self.main_log_update(LogType.ERROR, "Agent is busy.")
             return
@@ -209,16 +199,24 @@ class Dashboard(App):
         self.agent_lock.acquire(blocking=True)
         self.agent.talk_to_agent(message)
         self.agent_lock.release()
+        self.main_log_update(
+            LogType.INFO,
+            "Talking mode disabled.",
+        )
+        self.state = AgentState.WORKING
+        self.working_input_box()
+        self.main_log_update(
+            LogType.INFO,
+            "Message received. Agent will reply using the 'AGENT RESPONSE' tag.",
+        )
+        if self.active_worker is None and not self.agent_lock.locked():
+            self.restart_agent()
+        return
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         command = event.value.strip()
         event.input.value = ""
 
-        # TODO: Should I restart automatically after seding the message? I guess so
-        # Improve the user experience around the talking-mode: Agent must be running.
-        # Restart after message sent.
-        # Inform what is happening (agent will reply with the tag)
-        # Tool call box overflows (trim it).
         match command:
             case "quit":
                 if self.agent_lock.locked():
@@ -271,7 +269,7 @@ class Dashboard(App):
                     self.main_log_update(
                         LogType.ERROR, "Agent is already in talking state."
                     )
-                else:
+                elif self.active_worker is not None:
                     self.main_log_update(
                         LogType.INFO,
                         "Talking mode enabled. You can talk to the agent after "
@@ -283,6 +281,11 @@ class Dashboard(App):
                     command_box.border_title = "Talking input"
                     self.stop_work()
                     self.state = AgentState.TALKING
+                else:
+                    self.main_log_update(
+                        LogType.ERROR,
+                        "Agent must be running for talk mode to function."
+                    )
             case "restart":
                 if self.state == AgentState.TALKING:
                     self.main_log_update(LogType.ERROR, "Agent is in talking state.")
@@ -313,7 +316,6 @@ class Dashboard(App):
             - `load`: Load portfolio from portfolio.json.
             - `portfolio`: Print total porfolio value with profits and losses.
             - `talk-on`: Enable talking mode.
-            - `talk-off`: Disable talking mode.
         """)
         self.main_log_update(LogType.INFO, help_message)
 

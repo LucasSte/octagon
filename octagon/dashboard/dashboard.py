@@ -1,4 +1,6 @@
 import textwrap
+import threading
+from enum import Enum
 
 from rich.panel import Panel
 from rich.text import Text
@@ -10,6 +12,11 @@ from textual.worker import get_current_worker
 
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.log_type import LogType
+
+
+class AgentState(Enum):
+    TALKING = 1
+    WORKING = 2
 
 
 class Dashboard(App):
@@ -29,6 +36,8 @@ class Dashboard(App):
         self.agent.set_log_callback(self.main_log_update)
         self.agent.set_assets_callback(self.update_assets)
         self.agent.set_iterations_callback(self.update_iterations)
+        self.state = AgentState.WORKING
+        self.agent_lock = threading.Lock()
 
     def compose(self) -> ComposeResult:
         with Vertical(id="root"):
@@ -52,7 +61,7 @@ class Dashboard(App):
                         )
 
                     yield RichLog(
-                        max_lines=25,
+                        max_lines=55,
                         auto_scroll=True,
                         wrap=True,
                         id="bottom_left",
@@ -114,10 +123,7 @@ class Dashboard(App):
         self.query_one("#bottom_right").styles.height = "5fr"
 
         # Command box
-        command_box = self.query_one("#command", Input)
-        command_box.styles.height = 3
-        command_box.styles.border = ("round", "yellow")
-        command_box.border_title = "Command Input"
+        self.working_input_box()
 
         self.main_log_update(LogType.INFO, "Welcome to Octagon!")
         self.display_help()
@@ -126,9 +132,16 @@ class Dashboard(App):
             "Run `load` to load a previously saved portfolio for this session.",
         )
 
+    def working_input_box(self):
+        command_box = self.query_one("#command", Input)
+        command_box.styles.height = 3
+        command_box.styles.border = ("round", "yellow")
+        command_box.border_title = "Agent command input"
+
     def tool_status_update(self, message: str):
         log = self.query_one("#top_row_left", RichLog)
         line = Text(message)
+        line = (line[:70] + "...") if len(line) > 70 else line
         log.write(line)
 
     def main_log_update(self, log_type: LogType, message: str):
@@ -144,7 +157,11 @@ class Dashboard(App):
                 line.append("AGENT: ", style="yellow")
             case LogType.AGENT_REASONING:
                 line.append("REASONING: ", style="purple")
-        line.append(message)
+            case LogType.USER_MESSAGE:
+                line.append("USER: ", style="blue")
+            case LogType.AGENT_REPLY:
+                line.append("AGENT RESPONSE: ", style="green")
+        line.append(message.rstrip())
 
         log = self.query_one("#bottom_left", RichLog)
         log.write(line)
@@ -173,18 +190,52 @@ class Dashboard(App):
             )
         )
 
+    def talk_to_agent(self, message):
+        if self.agent_lock.locked():
+            self.main_log_update(LogType.ERROR, "Agent is busy.")
+            return
+
+        self.main_log_update(LogType.USER_MESSAGE, message)
+        self.agent_lock.acquire(blocking=True)
+        self.agent.talk_to_agent(message)
+        self.agent_lock.release()
+        self.main_log_update(
+            LogType.INFO,
+            "Talking mode disabled.",
+        )
+        self.state = AgentState.WORKING
+        self.working_input_box()
+        self.main_log_update(
+            LogType.INFO,
+            "Message received. Agent will reply using the 'AGENT RESPONSE' tag.",
+        )
+        if self.active_worker is None and not self.agent_lock.locked():
+            self.restart_agent()
+        return
+
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        command = event.value.strip().lower()
+        command = event.value.strip()
         event.input.value = ""
 
         match command:
             case "quit":
+                if self.agent_lock.locked():
+                    self.main_log_update(
+                        LogType.ERROR, "Can't quit. Waiting for agent to stop."
+                    )
+                    return
                 self.stop_work()
                 self.exit()
             case "start":
-                self.main_log_update(LogType.INFO, "Starting agent")
-                self.agent.portfolio.update_interface()
-                self.active_worker = self.run_agent()
+                if self.state == AgentState.TALKING:
+                    self.main_log_update(LogType.ERROR, "Agent is in talking state.")
+                elif self.active_worker is None and not self.agent_lock.locked():
+                    self.main_log_update(LogType.INFO, "Starting agent")
+                    self.agent.clear_history()
+                    self.agent.portfolio.update_interface()
+                    self.active_worker = self.run_agent()
+                else:
+                    self.main_log_update(LogType.ERROR, "Agent is already running")
             case "stop":
                 self.stop_work()
             case "save":
@@ -213,19 +264,58 @@ class Dashboard(App):
                 self.print_portfolio()
             case "help":
                 self.display_help()
+            case "talk-on":
+                if self.state == AgentState.TALKING:
+                    self.main_log_update(
+                        LogType.ERROR, "Agent is already in talking state."
+                    )
+                elif self.active_worker is not None:
+                    self.main_log_update(
+                        LogType.INFO,
+                        "Talking mode enabled. You can talk to the agent after "
+                        "as soon as it stops.",
+                    )
+                    command_box = self.query_one("#command", Input)
+                    command_box.styles.height = 3
+                    command_box.styles.border = ("round", "cyan")
+                    command_box.border_title = "Talking input"
+                    self.stop_work()
+                    self.state = AgentState.TALKING
+                else:
+                    self.main_log_update(
+                        LogType.ERROR,
+                        "Agent must be running for talk mode to function.",
+                    )
+            case "restart":
+                if self.state == AgentState.TALKING:
+                    self.main_log_update(LogType.ERROR, "Agent is in talking state.")
+                elif self.active_worker is None and not self.agent_lock.locked():
+                    self.restart_agent()
+                else:
+                    self.main_log_update(LogType.ERROR, "Agent is already running")
             case _:
-                self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
+                if self.state == AgentState.TALKING:
+                    self.talk_to_agent(command)
+                else:
+                    self.main_log_update(LogType.ERROR, f"Unknown command: {command}")
+
+    def restart_agent(self):
+        self.main_log_update(LogType.INFO, "Restarting agent")
+        self.agent.portfolio.update_interface()
+        self.active_worker = self.run_agent()
 
     def display_help(self):
         help_message = textwrap.dedent("""
             Available commands:
             - `help`: Show available commands.
             - `quit`: Stop agent and exit interface.
-            - `start`: Start trader agent.
+            - `start`: Clear context and start trader agent.
+            - `restart`: Start agent with existing context.
             - `stop`: Stop agent.
             - `save`: Save portfolio state in portfolio.json.
             - `load`: Load portfolio from portfolio.json.
             - `portfolio`: Print total porfolio value with profits and losses.
+            - `talk-on`: Enable talking mode.
         """)
         self.main_log_update(LogType.INFO, help_message)
 
@@ -241,14 +331,18 @@ class Dashboard(App):
     @work(thread=True, exclusive=False, exit_on_error=True)
     def run_agent(self):
         worker = get_current_worker()
+        self.agent_lock.acquire(blocking=True)
         self.agent.agent_loop(should_stop=lambda: worker.is_cancelled)
         self.main_log_update(LogType.INFO, "Agent stopped")
-        self.active_worker.cancel()
-        self.active_worker = None
-        self.main_log_update(
-            LogType.INFO,
-            "Hint: run `save` if you want to persist the portfolio for the next trading session.",
-        )
+        if self.active_worker is not None:
+            self.active_worker.cancel()
+            self.active_worker = None
+        if self.state == AgentState.WORKING:
+            self.main_log_update(
+                LogType.INFO,
+                "Hint: run `save` if you want to persist the portfolio for the next trading session.",
+            )
+        self.agent_lock.release()
 
     @work(thread=True, exclusive=False)
     def print_portfolio(self):

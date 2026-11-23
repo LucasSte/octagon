@@ -12,6 +12,7 @@ from octagon.tools.market_data.metadata import MarketDataTools
 from octagon.tools.market_data.yahoo import today_date_time
 from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.metadata import UtilityTools
+from octagon.tools.utilities.user_interaction import UserInteractionTools
 
 
 class TraderAgent:
@@ -23,6 +24,7 @@ class TraderAgent:
         model_name: str,
         default_tools,
     ):
+        self.initial_rounds = rounds
         self.rounds = rounds
         self.initial_prompt = initial_prompt
         api_key = os.environ.get("OPENAI_API_KEY") or "not-needed"
@@ -37,7 +39,9 @@ class TraderAgent:
         self.log_callback: Callable[[LogType, str], None] | None = None
         self.iterations_callback: Callable[[int, int], None] | None = None
 
-        if default_tools:
+        self.history = []
+        self.use_default_tools = default_tools
+        if self.use_default_tools:
             self.register_default_tools()
 
     def register_tool(self, tool: ToolDefinition):
@@ -59,6 +63,9 @@ class TraderAgent:
         # Log type, message
         self.log_callback = callback
         self.dispatcher.set_log_callback(callback)
+        if self.use_default_tools:
+            user_interaction = UserInteractionTools(callback)
+            self.register_tool(user_interaction)
 
     def set_assets_callback(self, callback: Callable[[str, float], None]):
         # Assets, balance
@@ -68,18 +75,64 @@ class TraderAgent:
         # Current iteration, maximum iterations
         self.iterations_callback = callback
 
+    def talk_to_agent(self, message: str):
+        content = [
+            {
+                "type": "text",
+                "text": f"{message}\n Respond to this using the 'reply_to_user' function if available.",
+            }
+        ]
+        self.history.append(
+            {
+                "role": "user",
+                "content": content,
+            }
+        )
+
+    def clear_history(self):
+        self.rounds = self.initial_rounds
+        self.history = []
+
+    def log_model_returns(self, response_message):
+        if self.log_callback is not None:
+            if (
+                hasattr(response_message, "reasoning_content")
+                and len(response_message.reasoning_content) > 0
+            ):
+                self.log_callback(
+                    LogType.AGENT_REASONING, response_message.reasoning_content
+                )
+
+            if (
+                hasattr(response_message, "reasoning")
+                and len(response_message.reasoning) > 0
+            ):
+                self.log_callback(LogType.AGENT_REASONING, response_message.reasoning)
+
+            if (
+                response_message.content is not None
+                and len(response_message.content) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
+
+            if (
+                response_message.refusal is not None
+                and len(response_message.refusal) > 0
+            ):
+                self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
+
     def agent_loop(self, should_stop):
         start_prompt = self.initial_prompt
         start_prompt += f"\n\n Today's date is {today_date_time()}"
 
         content = [{"type": "text", "text": start_prompt}]
 
-        messages = [
+        self.history.append(
             {
                 "role": "user",
                 "content": content,
             }
-        ]
+        )
 
         for i in range(self.rounds + 1):
             if self.iterations_callback is not None and i < self.rounds:
@@ -94,7 +147,7 @@ class TraderAgent:
                         "for the next round.",
                     }
                 ]
-                messages.append(
+                self.history.append(
                     {
                         "role": "user",
                         "content": new_content,
@@ -102,12 +155,13 @@ class TraderAgent:
                 )
 
             if should_stop():
+                self.rounds = self.initial_rounds - i - 1
                 break
 
             try:
                 chat_response = self.client.chat.completions.create(
                     model=self.model_name,
-                    messages=messages,
+                    messages=self.history,
                     tools=self.available_tools,
                     max_tokens=8196,
                     temperature=0.7,
@@ -124,39 +178,13 @@ class TraderAgent:
             response_message = chat_response.choices[0].message
 
             if should_stop():
+                self.rounds = self.initial_rounds - i - 1
                 break
 
-            if self.log_callback is not None:
-                if (
-                    response_message.content is not None
-                    and len(response_message.content) > 0
-                ):
-                    self.log_callback(LogType.AGENT_MESSAGE, response_message.content)
-
-                if (
-                    response_message.refusal is not None
-                    and len(response_message.refusal) > 0
-                ):
-                    self.log_callback(LogType.AGENT_MESSAGE, response_message.refusal)
-
-                if (
-                    hasattr(response_message, "reasoning_content")
-                    and len(response_message.reasoning_content) > 0
-                ):
-                    self.log_callback(
-                        LogType.AGENT_REASONING, response_message.reasoning_content
-                    )
-
-                if (
-                    hasattr(response_message, "reasoning")
-                    and len(response_message.reasoning) > 0
-                ):
-                    self.log_callback(
-                        LogType.AGENT_REASONING, response_message.reasoning
-                    )
+            self.log_model_returns(response_message)
 
             executed_action, has_stop = self.dispatcher.dispatch_function(
-                response_message, messages
+                response_message, self.history
             )
             if not executed_action and self.log_callback is not None:
                 self.log_callback(
@@ -165,5 +193,6 @@ class TraderAgent:
                 break
 
             if has_stop:
-                self.log_callback(LogType.INFO, "Stop requested by agent.")
+                if self.log_callback is not None:
+                    self.log_callback(LogType.INFO, "Stop requested by agent.")
                 break

@@ -35,3 +35,7 @@ class TestMemory(unittest.TestCase):
         write_memory("second item")
 
         print(read_memory())
+
+
+if __name__ == "__main__":
+    unittest.main()

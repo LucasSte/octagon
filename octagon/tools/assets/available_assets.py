@@ -27,6 +27,8 @@ available_assets = {
     "MRNA": Asset("Moderna, Inc.", "MRNA"),
     "GS": Asset("The Goldman Sachs Group, Inc.", "GS"),
     "AAAU": Asset("Goldman Sachs Physical Gold ETF", "AAAU"),
+    "LMT": Asset("Lockheed Martin Corporation", "LMT"),
+    "MNST": Asset("Monster Beverage Corporation", "MNST"),
 }
 
 

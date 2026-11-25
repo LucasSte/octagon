@@ -96,9 +96,10 @@ def fetch_headlines(query, months_ago):
 
 
 class NewsHeadlines(ToolDefinition):
-    def __init__(self, client: OpenAI, log_callback: Callable | None) -> None:
+    def __init__(self, client: OpenAI, model: str) -> None:
         self.client = client
-        self.log_callback = log_callback
+        self.log_callback = None
+        self.model = model
 
     def summarize_headlines(self, query):
         query = query.lower()
@@ -120,7 +121,7 @@ class NewsHeadlines(ToolDefinition):
 
         try:
             chat_response = self.client.chat.completions.create(
-                model="qwen/qwen3.8-27b",
+                model=self.model,
                 messages=history,
                 max_tokens=20000,
                 temperature=0.7,
@@ -148,7 +149,7 @@ class NewsHeadlines(ToolDefinition):
                 "type": "function",
                 "function": {
                     "name": "summarize_headlines",
-                    "description": "Fetches news headlines for a company and summarizes the information found.",
+                    "description": "Fetches news headlines for a company and summarizes the information found. News might give hints about future stock performance.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -169,3 +170,6 @@ class NewsHeadlines(ToolDefinition):
 
     def dispatch_dictionary(self) -> dict[str, Callable]:
         return {"summarize_headlines": self.summarize_headlines}
+
+    def register_log_callback(self, callback: Callable[[LogType, str], None]):
+        self.log_callback = callback

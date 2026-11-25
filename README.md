@@ -23,6 +23,7 @@ run the following:
 git clone https://github.com/LucasSte/octagon
 cd octagon
 pip install -r requirements.txt
+pip install .
 python3 octagon_trade.py
 ```
 

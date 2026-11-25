@@ -6,6 +6,7 @@ from openai import OpenAI
 from octagon.agent.tool_dispatch import ToolDispatch
 from octagon.dashboard.log_type import LogType
 from octagon.tools.analysis.metadata import AnalysisTools
+from octagon.tools.analysis.news_analysis import NewsHeadlines
 from octagon.tools.assets.available_assets import AssetsTool
 from octagon.tools.assets.portfolio import Portfolio
 from octagon.tools.market_data.metadata import MarketDataTools
@@ -41,6 +42,7 @@ class TraderAgent:
 
         self.history = []
         self.use_default_tools = default_tools
+        self.news_tool = None
         if self.use_default_tools:
             self.register_default_tools()
 
@@ -49,11 +51,13 @@ class TraderAgent:
         self.dispatcher.register_dispatch(tool.dispatch_dictionary())
 
     def register_default_tools(self):
+        self.news_tool = NewsHeadlines(self.client, self.model_name)
         self.register_tool(AnalysisTools())
         self.register_tool(AssetsTool())
         self.register_tool(self.portfolio)
         self.register_tool(MarketDataTools())
         self.register_tool(UtilityTools())
+        self.register_tool(self.news_tool)
 
     def set_tool_status_callback(self, callback: Callable[[str], None]):
         # message
@@ -66,6 +70,8 @@ class TraderAgent:
         if self.use_default_tools:
             user_interaction = UserInteractionTools(callback)
             self.register_tool(user_interaction)
+        if self.news_tool is not None:
+            self.news_tool.register_log_callback(callback)
 
     def set_assets_callback(self, callback: Callable[[str, float], None]):
         # Assets, balance

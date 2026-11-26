@@ -15,6 +15,9 @@ from octagon.tools.tool_definition import ToolDefinition
 from octagon.tools.utilities.metadata import UtilityTools
 from octagon.tools.utilities.user_interaction import UserInteractionTools
 
+# How many replies in a row without a tool call are tolerated before stopping.
+MAX_TEXT_ONLY_REPLIES = 2
+
 
 class TraderAgent:
     def __init__(
@@ -140,6 +143,7 @@ class TraderAgent:
             }
         )
 
+        consecutive_text_replies = 0
         for i in range(self.rounds + 1):
             if self.iterations_callback is not None and i < self.rounds:
                 self.iterations_callback(i + 1, self.rounds)
@@ -170,7 +174,7 @@ class TraderAgent:
                     messages=self.history,
                     tools=self.available_tools,
                     max_tokens=8196,
-                    temperature=0.7,
+                    temperature=0.5,
                     top_p=0.95,
                     extra_body={
                         "top_k": 20,
@@ -192,11 +196,43 @@ class TraderAgent:
             executed_action, has_stop = self.dispatcher.dispatch_function(
                 response_message, self.history
             )
-            if not executed_action and self.log_callback is not None:
-                self.log_callback(
-                    LogType.ERROR, "Returned response without tool call. Stopping"
+            if not executed_action:
+                consecutive_text_replies += 1
+                if consecutive_text_replies > MAX_TEXT_ONLY_REPLIES:
+                    if self.log_callback is not None:
+                        self.log_callback(
+                            LogType.ERROR,
+                            "Agent repeatedly replied without a tool call. Stopping",
+                        )
+                    break
+
+                if self.log_callback is not None:
+                    self.log_callback(
+                        LogType.INFO,
+                        "Returned response without tool call. Nudging agent.",
+                    )
+                self.history.append(
+                    {
+                        "role": "assistant",
+                        "content": response_message.content or "",
+                    }
                 )
-                break
+                self.history.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "You replied without calling a tool. Continue trading by calling "
+                                "one of the available tools (for example, 'wait' to monitor the market "
+                                "later, or 'stop' to end the session).",
+                            }
+                        ],
+                    }
+                )
+                continue
+
+            consecutive_text_replies = 0
 
             if has_stop:
                 if self.log_callback is not None:

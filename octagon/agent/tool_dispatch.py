@@ -29,6 +29,21 @@ class ToolDispatch:
         message_list.append(response_message)
         has_stop = False
         for tool_call in response_message.tool_calls:
+            if tool_call.function.name not in self.dispatch_dictionary:
+                # Every tool call must get a response, otherwise the next request fails.
+                if self.log_callback is not None:
+                    self.log_callback(
+                        LogType.ERROR, f"unknown tool: {tool_call.function.name}"
+                    )
+                message_list.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": f"Error: tool '{tool_call.function.name}' does not exist.",
+                    }
+                )
+                continue
+
             if tool_call.function.name in self.dispatch_dictionary:
                 sig = inspect.signature(
                     self.dispatch_dictionary[tool_call.function.name]
@@ -72,9 +87,25 @@ class ToolDispatch:
                     )
                     continue
 
-                call_response = self.dispatch_dictionary[tool_call.function.name](
-                    **parameters
-                )
+                try:
+                    call_response = self.dispatch_dictionary[tool_call.function.name](
+                        **parameters
+                    )
+                # ruff: noqa: BLE001
+                except Exception as e:
+                    if self.log_callback is not None:
+                        self.log_callback(
+                            LogType.ERROR,
+                            f"Tool {tool_call.function.name} failed: {e}",
+                        )
+                    message_list.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": f"Error while running {tool_call.function.name}: {e}",
+                        }
+                    )
+                    continue
 
                 if tool_call.function.name == "stop":
                     has_stop = True

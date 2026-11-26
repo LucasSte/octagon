@@ -33,6 +33,11 @@ class Portfolio(ToolDefinition):
 
     # Spot trade
     def buy_item(self, ticker, amount):
+        if not isinstance(amount, (int, float)) or amount <= 0:
+            return (
+                f"Invalid amount {amount}: the amount to buy must be a positive number."
+            )
+
         price = yahoo.real_time_price(ticker)
         total = amount * price
         if total > self.balance:
@@ -63,6 +68,9 @@ class Portfolio(ToolDefinition):
 
     # Spot trade
     def sell_item(self, ticker, amount):
+        if not isinstance(amount, (int, float)) or amount <= 0:
+            return f"Invalid amount {amount}: the amount to sell must be a positive number."
+
         if ticker not in self.portfolio_map:
             return f"{ticker} not in portfolio"
 
@@ -70,11 +78,11 @@ class Portfolio(ToolDefinition):
 
         message = ""
         if possession.quantity < amount:
-            amount = possession.quantity
             message += (
-                f"Selling all {possession.quantity:.2f} of {ticker}, since the request amount of {amount} "
-                f"is greater than the current holdings. "
+                f"The requested amount of {amount} units of {ticker} is greater than the current "
+                f"holdings, so selling all {possession.quantity:.2f} available. "
             )
+            amount = possession.quantity
 
         self.portfolio_map[ticker].quantity -= amount
 

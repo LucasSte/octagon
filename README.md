@@ -152,7 +152,6 @@ not necessarily in this order.
 
 * Connect to real trading venues. One option might be connecting to blockchains, like Solana or Hyperliquid, which 
   allows the agent to trade 24/7.
-* Simulate trading with historical data.
 
 Feature requests and bug fixes are welcomed! If you want anything else not in this list, or if you've found a bug, 
 please file an issue. Also, open an issue if you want any of these backlog items prioritized.

@@ -23,6 +23,7 @@ run the following:
 git clone https://github.com/LucasSte/octagon
 cd octagon
 pip install -r requirements.txt
+pip install .
 python3 octagon_trade.py
 ```
 
@@ -149,8 +150,6 @@ leaderboard.
 There are some ideas for the future of this project. They are going to be implemented soon, but
 not necessarily in this order.
 
-* Allow the agent to access curated news about the trading stock. More information, like the announcement of earnings, 
-  may influence trading decisions.
 * Connect to real trading venues. One option might be connecting to blockchains, like Solana or Hyperliquid, which 
   allows the agent to trade 24/7.
 * Simulate trading with historical data.

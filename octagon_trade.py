@@ -18,6 +18,8 @@ if __name__ == "__main__":
 
     Besides monitoring the assets you've purchased, be open to new opportunities in the basket of
     available assets, so check them during the day as well.
+
+    You can fetch curated news about each traded company. News might hint on future stock performance.
     """
     iterations = 35
 

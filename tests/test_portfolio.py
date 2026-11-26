@@ -95,9 +95,9 @@ class TestPortfolio(unittest.TestCase):
         # Check return message
         self.assertEqual(
             result,
-            "Selling all 2.00 of AAPL, since the request amount of 2 is greater than "
-            "the current holdings. Sold 2 units of AAPL at $120.00. You new uninvested balance "
-            "is $1020.00.",
+            "The requested amount of 5 units of AAPL is greater than the current holdings, so "
+            "selling all 2.00 available. Sold 2 units of AAPL at $120.00. You new "
+            "uninvested balance is $1020.00.",
         )
 
     @patch("octagon.tools.assets.portfolio.yahoo.real_time_price")
@@ -219,6 +219,41 @@ class TestPortfolio(unittest.TestCase):
         mock_price.return_value = 120.0
         self.portfolio.buy_item("AAPL", 1 / 3)
         self.assertEqual(self.portfolio.portfolio_map["AAPL"].quantity, 1)
+
+    @patch("octagon.tools.assets.portfolio.yahoo.real_time_price")
+    def test_buy_item_non_positive_amount(self, mock_price):
+        """Buying zero or a negative amount is rejected and changes nothing."""
+        mock_price.return_value = 50.0
+        for amount in (-5, -0.5, 0):
+            with self.subTest(amount=amount):
+                result = self.portfolio.buy_item("AAPL", amount)
+                self.assertEqual(
+                    result,
+                    f"Invalid amount {amount}: the amount to buy must be a positive number.",
+                )
+                self.assertEqual(self.portfolio.balance, self.initial_balance)
+                self.assertNotIn("AAPL", self.portfolio.portfolio_map)
+        mock_price.assert_not_called()
+
+    @patch("octagon.tools.assets.portfolio.yahoo.real_time_price")
+    def test_sell_item_non_positive_amount(self, mock_price):
+        """Selling zero or a negative amount is rejected and changes nothing."""
+        mock_price.return_value = 50.0
+        self.portfolio.buy_item("AAPL", 2)
+        balance_after_buy = self.portfolio.balance
+
+        for amount in (-5, -0.5, 0):
+            with self.subTest(amount=amount):
+                result = self.portfolio.sell_item("AAPL", amount)
+                self.assertEqual(
+                    result,
+                    f"Invalid amount {amount}: the amount to sell must be a positive number.",
+                )
+                self.assertEqual(self.portfolio.balance, balance_after_buy)
+                self.assertEqual(self.portfolio.portfolio_map["AAPL"].quantity, 2)
+                self.assertEqual(
+                    self.portfolio.portfolio_map["AAPL"].purchase_value, 100.0
+                )
 
 
 if __name__ == "__main__":

@@ -1,6 +1,15 @@
 import json
 import os.path
-import time
+
+from octagon.simulation.clock import get_clock
+
+MEMORY_FILE = "memory.json"
+
+
+def set_memory_file(path: str):
+    """Use a different memory file, e.g. to keep replay sessions apart from live ones."""
+    global MEMORY_FILE
+    MEMORY_FILE = path
 
 
 def wait(seconds: int):
@@ -9,8 +18,11 @@ def wait(seconds: int):
     :param seconds: time to wait in seconds
     :return:
     """
-    time.sleep(seconds)
+    clock = get_clock()
+    clock.sleep(seconds)
 
+    if clock.session_over():
+        return f"Waited {seconds}. The market is now closed."
     return f"Waited {seconds}"
 
 
@@ -26,15 +38,24 @@ def write_memory(content: str):
 
     raw_memory.append(
         {
-            "datetime": int(time.time()),
+            "datetime": int(get_clock().now().timestamp()),
             "entry": content,
         }
     )
 
-    with open("memory.json", "w") as f:
+    with open(MEMORY_FILE, "w") as f:
         json.dump(raw_memory, f)
 
     return "Wrote successfully to memory."
+
+
+def discard_memory_from(timestamp: int):
+    """Remove memory entries written at or after `timestamp` (Unix seconds)."""
+    raw_memory = read_memory_raw()
+    kept = [item for item in raw_memory if item["datetime"] < timestamp]
+    if len(kept) != len(raw_memory):
+        with open(MEMORY_FILE, "w") as f:
+            json.dump(kept, f)
 
 
 def stop(memory: str):
@@ -75,10 +96,10 @@ def read_memory_raw() -> list:
     """
     Read memory from the JSON file and return it as a raw list unsuitable for a string output.
     """
-    if not os.path.exists("memory.json"):
+    if not os.path.exists(MEMORY_FILE):
         return []
 
-    with open("memory.json", "r") as f:
+    with open(MEMORY_FILE, "r") as f:
         memory = json.load(f)
         sorted(memory, key=lambda x: x["datetime"])
 

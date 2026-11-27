@@ -7,8 +7,9 @@ from datetime import time as dtime
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from scipy.stats import t as student_t
+
+from octagon.simulation.market_data import get_market_data
 
 MARKET_OPEN = dtime(9, 30)
 MARKET_CLOSE = dtime(16, 0)
@@ -52,18 +53,13 @@ def fetch_returns(ticker: str, granularity: str) -> tuple:
         raise ValueError(f"granularity must be one of {list(GRANULARITY_CONFIG)}")
     cfg = GRANULARITY_CONFIG[granularity]
 
+    provider = get_market_data()
     if granularity == "1d":
-        price = yf.download(
-            ticker, start="", interval="1d", auto_adjust=True, progress=False
-        )["Close"]
+        price = provider.history(ticker, period="1mo", interval="1d")["Close"]
     elif granularity == "1h":
-        price = yf.download(
-            ticker, period="1y", interval="1h", auto_adjust=True, progress=False
-        )["Close"]
+        price = provider.history(ticker, period="1y", interval="1h")["Close"]
     else:
-        price = yf.download(
-            ticker, period="7d", interval="1m", auto_adjust=True, progress=False
-        )["Close"]
+        price = provider.history(ticker, period="7d", interval="1m")["Close"]
 
     price = price.dropna().squeeze()
 

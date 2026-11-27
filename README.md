@@ -40,6 +40,26 @@ and loads it again for the next session.
 Use `save` and `load` to save and restore the trading portfolio between sessions, and type `help` for all the
 available commands.
 
+### Replaying past days
+
+You can also let the agent trade a past day on historical data, as if it were happening live:
+
+```
+python3 octagon_replay.py --date 2026-11-20                  # one day, logs in the terminal
+python3 octagon_replay.py --date 2026-11-16 --days 5         # a week, with a summary against SPY
+python3 octagon_replay.py --date 2026-11-20 --dashboard      # one day in the dashboard
+```
+
+The agent sees a simulated clock that starts at 09:30 New York time. Every tool only returns data that existed
+at that time, `wait` moves the clock forward, and each model response costs the real time the model took to answer
+(or a fixed `--turn-seconds`). Orders fill at the next minute's open, plus optional `--slippage-bps`, and are refused
+outside trading hours. The day ends at the 16:00 close.
+
+Tools that only expose today's data (news, StockTwits, options, analyst ratings and company info) are not offered
+during a replay. Yahoo keeps 1-minute bars for about 30 days, so older days use coarser bars. Prefer days after
+your model's training cutoff, so it cannot simply remember what happened. Replays write to `memory_replay_<date>.json`
+and `portfolio_replay_<date>.json`, which are cleared at the start of each run unless you pass `--resume`.
+
 ### Adding new tools
 
 Trading strategies may vary between people. If you want to customize trading decisions and data sources, the best way 

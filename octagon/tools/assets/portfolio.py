@@ -1,3 +1,4 @@
+import copy
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -27,6 +28,21 @@ class Portfolio(ToolDefinition):
         self.portfolio_map = portfolio_map
         self.interface_callback: Callable[[str, float]] | None = None
         self.session_history = []
+        self.file_path = "portfolio.json"
+
+    def snapshot(self) -> dict:
+        """Copy of the portfolio's state, to restore later with `restore`."""
+        return {
+            "balance": self.balance,
+            "portfolio_map": copy.deepcopy(self.portfolio_map),
+            "session_history": list(self.session_history),
+        }
+
+    def restore(self, snapshot: dict):
+        self.balance = snapshot["balance"]
+        self.portfolio_map = copy.deepcopy(snapshot["portfolio_map"])
+        self.session_history = list(snapshot["session_history"])
+        self.update_interface()
 
     def get_balance(self):
         return f"Your uninvested balance is ${self.balance:.2f}"
@@ -38,7 +54,7 @@ class Portfolio(ToolDefinition):
                 f"Invalid amount {amount}: the amount to buy must be a positive number."
             )
 
-        price = yahoo.real_time_price(ticker)
+        price = yahoo.execution_price(ticker, "buy")
         total = amount * price
         if total > self.balance:
             return "Insufficient Balance"
@@ -84,6 +100,9 @@ class Portfolio(ToolDefinition):
             )
             amount = possession.quantity
 
+        # Get the price before touching the holdings, so a failed quote leaves them intact.
+        price = yahoo.execution_price(ticker, "sell")
+
         self.portfolio_map[ticker].quantity -= amount
 
         if self.portfolio_map[ticker].quantity <= 0:
@@ -108,7 +127,6 @@ class Portfolio(ToolDefinition):
             self.portfolio_map[ticker].purchase_value = ticker_purchase_value
             self.portfolio_map[ticker].purchase_history = ticker_history
 
-        price = yahoo.real_time_price(ticker)
         total = amount * price
         self.balance += total
 
@@ -144,6 +162,13 @@ class Portfolio(ToolDefinition):
             final_string += "No assets in portfolio"
 
         return final_string
+
+    def total_value(self) -> float:
+        """Uninvested balance plus the market value of every holding."""
+        value = self.balance
+        for ticker, possession in self.portfolio_map.items():
+            value += possession.quantity * yahoo.real_time_price(ticker)
+        return value
 
     def print_portfolio(self, callback: Callable[[LogType, str], None]):
         formatted_portfolio = "PORTFOLIO: \n" + self.get_formatted_portfolio() + "\n"
@@ -182,11 +207,11 @@ class Portfolio(ToolDefinition):
             "Assets": assets,
         }
 
-        with open("portfolio.json", "w") as f:
+        with open(self.file_path, "w") as f:
             json.dump(dump_dict, f)
 
     def load(self):
-        with open("portfolio.json", "r") as f:
+        with open(self.file_path, "r") as f:
             json_data = json.load(f)
 
         self.balance = json_data["Uninvested balance"]

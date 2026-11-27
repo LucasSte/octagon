@@ -9,6 +9,8 @@ from octagon.tools.assets.available_assets import available_assets
 class ToolDispatch:
     def __init__(self):
         self.dispatch_dictionary = {}
+        # Registered tools that are currently unavailable (e.g. live-only data in a simulation).
+        self.excluded_tools: set[str] = set()
 
         self.log_callback: Callable[[LogType, str], None] | None = None
         self.tool_status_callback: Callable[[str], None] | None = None
@@ -29,7 +31,10 @@ class ToolDispatch:
         message_list.append(response_message)
         has_stop = False
         for tool_call in response_message.tool_calls:
-            if tool_call.function.name not in self.dispatch_dictionary:
+            if (
+                tool_call.function.name not in self.dispatch_dictionary
+                or tool_call.function.name in self.excluded_tools
+            ):
                 # Every tool call must get a response, otherwise the next request fails.
                 if self.log_callback is not None:
                     self.log_callback(

@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from hmmlearn.hmm import GaussianHMM
+
+from octagon.simulation.market_data import get_market_data
 
 
 def fit_hmm(
@@ -112,9 +113,8 @@ def markov_chain_regime(ticker, states):
     #     period = '180d'
 
     price = (
-        yf.download(
-            ticker, period="800d", interval="1d", auto_adjust=True, progress=False
-        )["Close"]
+        get_market_data()
+        .history(ticker, period="800d", interval="1d")["Close"]
         .dropna()
         .squeeze()
     )

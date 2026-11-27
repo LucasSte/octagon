@@ -1,11 +1,18 @@
 import mplfinance as mpf
-import pytz
 
 from octagon.tools.market_data.yahoo_utils import *
 
 """
 FUNCTIONS TO BE USED AS TOOLS FOR AGENTS.
 """
+
+
+def execution_price(ticker, side):
+    """Price at which a market order fills now. side is 'buy' or 'sell'."""
+    provider = get_market_data()
+    if provider.is_live:
+        return real_time_price(ticker)
+    return provider.execution_price(ticker, side)
 
 
 def formatted_price(ticker):
@@ -20,8 +27,7 @@ def today_date_time():
     Synced to New York time zone (stock exchange)
     :return: Date
     """
-    ny_tz = pytz.timezone("America/New_York")
-    now_ny = datetime.now(ny_tz)
+    now_ny = get_clock().now()
     formatted = "Today's date (YYYY-MM-DD HH:MM): "
     return formatted + now_ny.strftime("%Y-%m-%d %H:%M")
 
@@ -34,7 +40,6 @@ def formatted_historical_data(ticker, start, end, interval):
     """
     if interval not in allowed_intervals:
         return f"Invalid interval: {interval}"
-    historical_data = get_historical_data(ticker, start, end, interval)
 
     if start is not None:
         start_val = validate_date(start)
@@ -46,6 +51,7 @@ def formatted_historical_data(ticker, start, end, interval):
         if end_val != "":
             return end_val
 
+    historical_data = get_historical_data(ticker, start, end, interval)
     if historical_data.empty:
         return f"No data available for {ticker}"
 

@@ -3,3 +3,5 @@ __pycache__/
 portfolio.json
 opencode.json
 memory.json
+memory_replay*.json
+portfolio_replay*.json

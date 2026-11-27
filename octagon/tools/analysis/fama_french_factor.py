@@ -1,7 +1,11 @@
 import pandas as pd
 import statsmodels.api as sm
-import yfinance as yf
 from pandas_datareader import data as pdr
+
+from octagon.simulation.clock import get_clock
+from octagon.simulation.market_data import get_market_data
+
+FACTOR_PUBLICATION_LAG = pd.DateOffset(months=1)
 
 
 def fetch_ff_factors(
@@ -76,9 +80,8 @@ def fetch_stock_returns(
     ticker: str, start: str, end: str | None = None, frequency: str = "monthly"
 ) -> pd.Series:
     price = (
-        yf.download(ticker, start=start, end=end, auto_adjust=True, progress=False)[
-            "Close"
-        ]
+        get_market_data()
+        .history(ticker, start=start, end=end, interval="1d")["Close"]
         .dropna()
         .squeeze()
     )
@@ -167,14 +170,15 @@ def fama_french_factor(ticker, model, frequency):
     else:
         return f"Invalid frequency: {frequency}"
 
-    fetch_start = (
-        pd.Timestamp.today() - pd.DateOffset(years=fetch_years_back)
-    ).strftime("%Y-%m-%d")
+    now = pd.Timestamp(get_clock().now()).tz_localize(None)
+    fetch_start = (now - pd.DateOffset(years=fetch_years_back)).strftime("%Y-%m-%d")
 
     if model != "3factor" and model != "5factor":
         return f"Invalid model: {model}"
 
     factors = fetch_ff_factors(model=model, frequency=frequency, start=fetch_start)
+    # Ken French publishes factor returns with roughly a month of delay.
+    factors = factors[factors.index <= now - FACTOR_PUBLICATION_LAG]
     stock_returns = fetch_stock_returns(ticker, start=fetch_start, frequency=frequency)
     if (frequency == "daily" and len(stock_returns) < fetch_years_back * 240) or (
         frequency == "monthly" and len(stock_returns) < fetch_years_back * 12

@@ -1,5 +1,6 @@
 import textwrap
 import threading
+from datetime import datetime
 from enum import Enum
 
 from rich.panel import Panel
@@ -7,11 +8,20 @@ from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Input, RichLog, Static
+from textual.widgets import Input, RichLog, Select, Static
 from textual.worker import get_current_worker
 
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.log_type import LogType
+from octagon.simulation.clock import MARKET_TZ, get_clock
+from octagon.simulation.replay import (
+    ReplayConfig,
+    check_replay_day,
+    parse_replay_start,
+)
+
+LIVE_MODE = "live"
+SIMULATION_MODE = "simulation"
 
 
 class AgentState(Enum):
@@ -38,6 +48,7 @@ class Dashboard(App):
         self.agent.set_iterations_callback(self.update_iterations)
         self.state = AgentState.WORKING
         self.agent_lock = threading.Lock()
+        self.iterations = (0, 0)
 
     def compose(self) -> ComposeResult:
         with Vertical(id="root"):
@@ -82,6 +93,24 @@ class Dashboard(App):
                         id="bottom_right",
                     )
 
+            with Horizontal(id="mode_bar"):
+                yield Select(
+                    [("Live trading", LIVE_MODE), ("Simulation", SIMULATION_MODE)],
+                    value=self.current_mode(),
+                    allow_blank=False,
+                    id="mode_select",
+                )
+                replay = self.agent.replay
+                yield Input(
+                    value=(
+                        f"{replay.day} {replay.start_time:%H:%M}"
+                        if replay is not None
+                        else ""
+                    ),
+                    placeholder="Day to simulate: YYYY-MM-DD or YYYY-MM-DD HH:MM, then Enter",
+                    id="sim_date",
+                )
+
             yield Input(
                 placeholder="Enter a command and press Enter...",
                 id="command",
@@ -122,8 +151,17 @@ class Dashboard(App):
         self.query_one("#top_right").styles.height = "1fr"
         self.query_one("#bottom_right").styles.height = "5fr"
 
+        # Mode bar
+        self.query_one("#mode_bar").styles.height = "auto"
+        self.query_one("#mode_select").styles.width = 24
+        date_box = self.query_one("#sim_date", Input)
+        date_box.styles.width = "1fr"
+        date_box.styles.border = ("round", "magenta")
+        date_box.border_title = "Simulated day (New York time)"
+
         # Command box
         self.working_input_box()
+        self.refresh_agent_panel()
 
         self.main_log_update(LogType.INFO, "Welcome to Octagon!")
         self.display_help()
@@ -143,6 +181,7 @@ class Dashboard(App):
         line = Text(message)
         line = (line[:70] + "...") if len(line) > 70 else line
         log.write(line)
+        self.refresh_agent_panel()
 
     def main_log_update(self, log_type: LogType, message: str):
         line = Text()
@@ -181,14 +220,99 @@ class Dashboard(App):
         )
 
     def update_iterations(self, current: int, maximum: int):
+        self.iterations = (current, maximum)
+        self.refresh_agent_panel()
+
+    def refresh_agent_panel(self):
+        current, maximum = self.iterations
+        text = f"Iterations: {current}/{maximum}\n"
+        if self.agent.replay is None:
+            text += "Mode: live"
+        else:
+            text += f"Mode: simulation\n{get_clock().now():%Y-%m-%d %H:%M}"
         self.query_one("#top_row_right", Static).update(
-            Panel(
-                f"Iterations: {current}/{maximum}",
-                title="Agent",
-                border_style="green",
-                expand=True,
-            )
+            Panel(text, title="Agent", border_style="green", expand=True)
         )
+
+    # ---------- live / simulation mode ----------
+
+    def current_mode(self) -> str:
+        return LIVE_MODE if self.agent.replay is None else SIMULATION_MODE
+
+    def agent_busy(self) -> bool:
+        return self.active_worker is not None or self.agent_lock.locked()
+
+    def sync_mode_select(self):
+        self.query_one("#mode_select", Select).value = self.current_mode()
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        if event.select.id != "mode_select" or event.value == self.current_mode():
+            return
+        if event.value == LIVE_MODE:
+            self.apply_mode(None)
+            return
+
+        day_text = self.query_one("#sim_date", Input).value.strip()
+        if day_text:
+            self.apply_mode(day_text)
+        else:
+            self.main_log_update(
+                LogType.INFO,
+                "Type the day to simulate in the date box and press Enter.",
+            )
+            self.query_one("#sim_date", Input).focus()
+
+    def apply_mode(self, day_text: str | None):
+        """Switch to live trading (None) or to simulating the day in `day_text`."""
+        if self.agent_busy():
+            self.main_log_update(
+                LogType.ERROR, "Stop the agent before changing the trading mode."
+            )
+            self.sync_mode_select()
+            return
+
+        if day_text is None:
+            message = self.agent.set_replay(None)
+        else:
+            try:
+                day, start_time = parse_replay_start(day_text)
+            except ValueError as e:
+                self.main_log_update(LogType.ERROR, f"Invalid day to simulate: {e}")
+                self.sync_mode_select()
+                return
+
+            error, warning = check_replay_day(day, datetime.now(MARKET_TZ).date())
+            if error is not None:
+                self.main_log_update(LogType.ERROR, error)
+                self.sync_mode_select()
+                return
+            if warning is not None:
+                self.main_log_update(LogType.WARN, warning)
+            message = self.agent.set_replay(
+                ReplayConfig(day=day, start_time=start_time)
+            )
+
+        # The conversation refers to another day's prices, so it must not carry over.
+        self.agent.clear_history()
+        self.iterations = (0, 0)
+        self.main_log_update(LogType.INFO, message + " Agent context cleared.")
+        if self.agent.replay is not None:
+            self.main_log_update(
+                LogType.INFO,
+                "News, StockTwits, options, analyst and company info tools are off while simulating.",
+            )
+        self.sync_mode_select()
+        self.refresh_agent_panel()
+
+    def simulated_session_over(self) -> bool:
+        if self.agent.replay is not None and get_clock().session_over():
+            self.main_log_update(
+                LogType.ERROR,
+                f"The simulated session of {self.agent.replay.day} is over. "
+                "Pick another day to simulate.",
+            )
+            return True
+        return False
 
     def talk_to_agent(self, message):
         if self.agent_lock.locked():
@@ -214,6 +338,10 @@ class Dashboard(App):
         return
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input.id == "sim_date":
+            self.apply_mode(event.value.strip())
+            return
+
         command = event.value.strip()
         event.input.value = ""
 
@@ -229,6 +357,8 @@ class Dashboard(App):
             case "start":
                 if self.state == AgentState.TALKING:
                     self.main_log_update(LogType.ERROR, "Agent is in talking state.")
+                elif self.simulated_session_over():
+                    pass
                 elif self.active_worker is None and not self.agent_lock.locked():
                     self.main_log_update(LogType.INFO, "Starting agent")
                     self.agent.clear_history()
@@ -246,7 +376,8 @@ class Dashboard(App):
                 else:
                     self.agent.portfolio.save()
                     self.main_log_update(
-                        LogType.INFO, "Successfully saved portfolio in portfolio.json"
+                        LogType.INFO,
+                        f"Successfully saved portfolio in {self.agent.portfolio.file_path}",
                     )
             case "load":
                 if self.active_worker is not None:
@@ -257,7 +388,8 @@ class Dashboard(App):
                     self.agent.portfolio.load()
                     self.agent.portfolio.update_interface()
                     self.main_log_update(
-                        LogType.INFO, "Successfully loaded portfolio.json"
+                        LogType.INFO,
+                        f"Successfully loaded {self.agent.portfolio.file_path}",
                     )
             case "portfolio":
                 self.main_log_update(LogType.INFO, "Calculating portfolio value ...")
@@ -289,6 +421,8 @@ class Dashboard(App):
             case "restart":
                 if self.state == AgentState.TALKING:
                     self.main_log_update(LogType.ERROR, "Agent is in talking state.")
+                elif self.simulated_session_over():
+                    pass
                 elif self.active_worker is None and not self.agent_lock.locked():
                     self.restart_agent()
                 else:
@@ -312,10 +446,15 @@ class Dashboard(App):
             - `start`: Clear context and start trader agent.
             - `restart`: Start agent with existing context.
             - `stop`: Stop agent.
-            - `save`: Save portfolio state in portfolio.json.
-            - `load`: Load portfolio from portfolio.json.
+            - `save`: Save portfolio state (portfolio.json, or portfolio_replay.json when simulating).
+            - `load`: Load portfolio from the same file.
             - `portfolio`: Print total porfolio value with profits and losses.
             - `talk-on`: Enable talking mode.
+
+            Use the selector at the bottom to switch between live trading and a simulation.
+            For a simulation, type a past day (YYYY-MM-DD, optionally followed by HH:MM)
+            in the date box and press Enter. The agent then trades that day on historical
+            data with a simulated clock. Live and simulated portfolios are kept apart.
         """)
         self.main_log_update(LogType.INFO, help_message)
 

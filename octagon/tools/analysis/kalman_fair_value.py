@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-import yfinance as yf
 from pykalman import KalmanFilter
+
+from octagon.simulation.market_data import get_market_data
 
 
 def fit_local_level_em(price, n_iter: int = 20, em_vars=None):
@@ -120,9 +121,7 @@ def kalman_fair_value(ticker, period, interval, method):
     if period not in {"5d", "6d", "7d", "8d", "9d", "10d"}:
         return f"Invalid period: {period}"
 
-    data = yf.download(
-        ticker, period=period, interval=interval, auto_adjust=True, progress=False
-    )["Close"]
+    data = get_market_data().history(ticker, period=period, interval=interval)["Close"]
     data = data.dropna().squeeze()
 
     formatted_response = ""

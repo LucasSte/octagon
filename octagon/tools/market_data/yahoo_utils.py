@@ -6,6 +6,9 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 import yfinance as yf
 
+from octagon.simulation.clock import get_clock
+from octagon.simulation.market_data import get_market_data
+
 """
 UTILITY FUNCTIONS.
 DO NOT INVOKE THESE DIRECTLY!
@@ -33,37 +36,27 @@ def rate_limit(max_per_second=2):
     return decorator
 
 
-@rate_limit(max_per_second=2)
 def real_time_price(ticker):
-    # Get stock info
-    stock = yf.Ticker(ticker)
-    return stock.fast_info["lastPrice"]
+    """Latest price according to the active market data provider (live or replay)."""
+    return get_market_data().last_price(ticker)
 
 
-@rate_limit(max_per_second=2)
 def get_historical_data(symbol, start, end, interval="1d"):
     """
     Get historical OHLCV data.
 
     Intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
     """
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(start=start, end=end, interval=interval)
-
-    return df
+    return get_market_data().history(symbol, start=start, end=end, interval=interval)
 
 
-@rate_limit(max_per_second=2)
 def get_intraday_historical_data(symbol, period, interval="5m"):
     """
     Get historical OHLCV data.
 
     Intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
     """
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(period=period, interval=interval)
-
-    return df
+    return get_market_data().history(symbol, period=period, interval=interval)
 
 
 allowed_intervals = {
@@ -91,7 +84,7 @@ def validate_date(date_string):
         )
 
         # Check if date is not in the future
-        today = datetime.now(ZoneInfo("America/New_York"))
+        today = get_clock().now()
         if date_obj >= today:
             return "Date in the future"
 
@@ -127,19 +120,9 @@ def get_company_info(symbol):
     }
 
 
-@rate_limit(max_per_second=2)
 def get_financials(symbol):
-    ticker = yf.Ticker(symbol)
-
-    # Add earnings
-    return {
-        "income_statement": ticker.financials,
-        "quarterly_income": ticker.quarterly_financials,
-        "balance_sheet": ticker.balance_sheet,
-        "quarterly_balance": ticker.quarterly_balance_sheet,
-        "cash_flow": ticker.cashflow,
-        "quarterly_cash_flow": ticker.quarterly_cashflow,
-    }
+    # In replay mode, statements that were not yet published at the simulated time are removed.
+    return get_market_data().financial_statements(symbol)
 
 
 def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
@@ -156,6 +139,9 @@ def build_financials_table(symbol, income_key, balance_key, cash_flow_key):
     ebitda_row = "| EBITDA         |"
     assets_row = "| Total Assets   |"
     flow_row = "| Free Cash Flow |"
+
+    if min(len(income.columns), len(balance.columns), len(cash_flow.columns)) < 3:
+        return f"Not enough published financial statements for {symbol}"
 
     total_revenue = income.loc["Total Revenue"]
     gross_profit = income.loc["Gross Profit"]

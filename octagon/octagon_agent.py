@@ -3,12 +3,20 @@ from collections.abc import Callable
 from octagon.agent.trader_agent import TraderAgent
 from octagon.dashboard.dashboard import Dashboard
 from octagon.dashboard.log_type import LogType
+from octagon.simulation.clock import get_clock
+from octagon.simulation.replay import ReplayConfig
 from octagon.tools.tool_definition import ToolDefinition
 
 
 class OctagonAgent:
     def __init__(
-        self, iterations: int, initial_prompt: str, url, model, default_tools=True
+        self,
+        iterations: int,
+        initial_prompt: str,
+        url,
+        model,
+        default_tools=True,
+        replay: ReplayConfig | None = None,
     ):
         """
         :param iterations: Number of iterations to run the agent for
@@ -16,11 +24,20 @@ class OctagonAgent:
         :param url: URL endpoint to invoke the agent
         :param model: The model that is serving as the LLM
         :param default_tools: Whether to use the TraderAgent default tools
+        :param replay: If set, the agent trades a past day on historical data with a simulated clock
         """
         self.inner_agent = TraderAgent(
-            iterations, initial_prompt, url, model, default_tools
+            iterations, initial_prompt, url, model, default_tools, replay
         )
         self.dashboard = None
+
+    @property
+    def clock(self):
+        return get_clock()
+
+    def set_replay(self, config: ReplayConfig | None) -> str:
+        """Switch between live trading (None) and simulating a past day."""
+        return self.inner_agent.set_replay(config)
 
     def register_tool(self, tool: ToolDefinition):
         self.inner_agent.register_tool(tool)

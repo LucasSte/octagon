@@ -3,8 +3,7 @@ from octagon.octagon_agent import OctagonAgent
 MODEL = "qwen/qwen3.8-27b"
 URL = "http://localhost:1234/v1"
 
-if __name__ == "__main__":
-    initial_prompt = """
+INITIAL_PROMPT = """
     You are a quantitative trader allowed to perform trades, and your goal is to increase the available balance
     of my portfolio by actively trading the available assets and using the provided tools for information access.
 
@@ -21,7 +20,9 @@ if __name__ == "__main__":
 
     You can fetch curated news about each traded company. News might hint on future stock performance.
     """
+
+if __name__ == "__main__":
     iterations = 35
 
-    trader_agent = OctagonAgent(iterations, initial_prompt, URL, MODEL)
+    trader_agent = OctagonAgent(iterations, INITIAL_PROMPT, URL, MODEL)
     trader_agent.run_with_dashboard()
